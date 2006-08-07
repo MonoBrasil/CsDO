@@ -884,7 +884,7 @@ namespace CsDO.Lib
 				data = formatValue(propriedade);
 								
 				if ((data != null) && !data.Equals("0")
-                    && !data.Equals("'00010101 12:00:00'") 
+                    && !data.Equals("'00010101 00:00:00'") 
                     && !data.Equals("NULL"))
 					values += data + ",";
         
@@ -1081,7 +1081,7 @@ namespace CsDO.Lib
 				
 				//TODO: Identificar o que foi alterado
 				if (primaryKey && (search != null) && !search.Equals("0")
-                    && !search.Equals("'00010101 12:00:00'") 
+                    && !search.Equals("'00010101 00:00:00'") 
                     && !search.Equals("NULL"))
 				{
 					item = "("+ name + operador + search + ")";
@@ -1089,7 +1089,7 @@ namespace CsDO.Lib
 					
 					clausule  += item + " AND ";
 				} else if ((search != null) && !search.Equals("0")
-                    && !search.Equals("'00010101 12:00:00'")
+                    && !search.Equals("'00010101 00:00:00'")
                     && !search.Equals("NULL"))
 
 					values += name + "=" + search + ",";
@@ -1180,7 +1180,7 @@ namespace CsDO.Lib
 				
 				//TODO: Identificar o que foi alterado
                 if (search != null && !search.Equals("0")
-                    && !search.Equals("'00010101 12:00:00'")
+                    && !search.Equals("'00010101 00:00:00'")
                     && !search.Equals("NULL"))
 			        {
 				        item = "("+ name + operador + search + ")";
@@ -1190,7 +1190,7 @@ namespace CsDO.Lib
 			        }
 				
 				if (primaryKey && (search != null) && !search.Equals("0")
-                    && !search.Equals("00010101 12:00:00"))
+                    && !search.Equals("00010101 00:00:00"))
 					break;
 			}
 					
