@@ -942,10 +942,10 @@ namespace CsDO.Lib
 
 		public bool deleteCascade()
 		{
-			bool result = false;
+			bool result = true;
 
 			if (Persisted)
-				result = delete();
+				result &= delete();
 
 			if (ForeignKeys.Count > 0)
 				foreach(PropertyInfo foreignKey in ForeignKeys) {
@@ -953,7 +953,7 @@ namespace CsDO.Lib
 					if (obj != null && obj.Persisted) {
 						if (debug)
 							Console.WriteLine("**** Deleting " + foreignKey.Name + " ...");
-						result = result || obj.deleteCascade();
+						result &= obj.deleteCascade();
 						obj = null;
 						foreignKey.SetValue(this, null, null);
 					}
