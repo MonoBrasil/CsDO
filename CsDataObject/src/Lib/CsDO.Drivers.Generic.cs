@@ -51,8 +51,10 @@ namespace CsDO.Drivers
 	/// <summary>
 	/// Summary description for CsDO.
 	/// </summary>
-	public class Generic : IDataBase
+	public class Generic : IDataBase, IDisposable
 	{
+        IDbConnection conn = null;
+
 		public Generic() {}
 
 		public IDbCommand getCommand(String sql) {
@@ -60,9 +62,21 @@ namespace CsDO.Drivers
             if (command != null)
             {
                 command.CommandText = sql;
-                command.Connection = objectConnection();
-                if (command.Connection != null)
-                    command.Connection.Open();
+                conn = objectConnection();
+                try
+                {
+                    command.Connection = conn;
+                    if (command.Connection != null &&
+                        (command.Connection.State == ConnectionState.Broken
+                        || command.Connection.State == ConnectionState.Closed))
+                    {
+                        command.Connection.Open();
+                    }
+                }
+                catch (DataException e)
+                {
+                    conn.Dispose();
+                }
             }
 			return command;
 		}
@@ -77,7 +91,12 @@ namespace CsDO.Drivers
 			return this.getCommand(sql);
 		}
 
+        private IDbConnection conexao = null;
+
 		protected IDbConnection objectConnection() {
+            if (conexao != null)
+                return conexao;
+
 			Assembly assembly;
 			string prefix;
             if (ConfigurationManager.AppSettings["dbNameSpace"] != null)
@@ -91,7 +110,6 @@ namespace CsDO.Drivers
             assembly = Assembly.Load(ConfigurationManager.AppSettings["dbAssembly"].ToString());
 
 			Type[] tipos = assembly.GetTypes();
-			IDbConnection conexao = null;
 
 			foreach (Type tipo in tipos) {
 				Type getInterface = tipo.GetInterface("IDbConnection");
@@ -125,7 +143,6 @@ namespace CsDO.Drivers
 			return conexao;
 
 		}
-
 
 		protected IDbCommand objectCommand() {
 			Assembly assembly;
@@ -201,7 +218,6 @@ namespace CsDO.Drivers
 			return dataAdapter;
 		}
 
-
         protected IDbDataAdapter objectDataAdapter(IDbCommand command)
         {
             Assembly assembly;
@@ -259,5 +275,15 @@ namespace CsDO.Drivers
             return dataAdapter;
         }
 
-	}
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            if (conn != null)
+                conn.Dispose();
+        }
+
+        #endregion
+    }
 }

@@ -105,15 +105,33 @@ namespace CsDO.Drivers.SqlServer
 		
 		protected void open(string URL) 
 	  	{
-			conn = new SqlConnection(URL);
-				conn.Open();
+            try
+            {
+
+                if (conn == null)
+                {
+                    conn = new SqlConnection(URL);
+                    conn.Open();
+                }
+                else
+                {
+                    if (conn.State == ConnectionState.Broken
+                        || conn.State == ConnectionState.Closed)
+                    {
+                        conn.Open();
+                    }
+                }
+            }
+            catch (DataException e)
+            {
+                conn.Dispose();
+            }
 		}
 
 		protected void close()
 		{
 			if (conn != null)
 				conn.Close();
-			//GC();
 		}
 	}
 }

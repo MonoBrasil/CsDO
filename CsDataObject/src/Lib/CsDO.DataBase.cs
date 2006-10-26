@@ -46,24 +46,26 @@ using System.Collections;
 
 namespace CsDO.Lib
 {
-	public class Conf
-	{
-		static IDataBase _driver;
+    #region Conf
+
+    public class Conf
+    {
+        static IDataBase _driver;
         static DataPool _dataPool;
         static bool _dataPooling;
 
-		static Conf()
-		{
-			_driver = new CsDO.Drivers.Generic();
+        static Conf()
+        {
+            _driver = new CsDO.Drivers.Generic();
             _dataPool = DataPool.New();
             _dataPooling = false;
-		}
+        }
 
-		public static IDataBase Driver
-		{
-			get { return _driver; }
-			set { _driver = value; }
-		}
+        public static IDataBase Driver
+        {
+            get { return _driver; }
+            set { _driver = value; }
+        }
 
         public static DataPool DataPool
         {
@@ -75,73 +77,83 @@ namespace CsDO.Lib
             get { return _dataPooling; }
             set { _dataPooling = value; }
         }
-	}
+    }
 
-	public interface IDataBase
-	{
-		IDbCommand getCommand(String sql);
-		IDbCommand getSystemCommand(String sql);
-		IDataAdapter getDataAdapter(IDbCommand command);
-	}
+    #endregion
 
-	public class DataBase : Singleton
+    #region IDatabase
+
+    public interface IDataBase
+    {
+        IDbCommand getCommand(String sql);
+        IDbCommand getSystemCommand(String sql);
+        IDataAdapter getDataAdapter(IDbCommand command);
+    } 
+
+    #endregion
+
+	public class DataBase : Singleton, IDisposable
 	{
 		protected IList dataReaders = new ArrayList();
 
 		new public static DataBase New() { return (DataBase) Instance(typeof(DataBase)); }
 
-		public void disposeDataReaders()
-		{
-			if (dataReaders.Count > 0)
-				foreach(IDataReader dataReader in dataReaders) {
-					if (!dataReader.IsClosed)
-						dataReader.Close();
-				}
-				dataReaders.Clear();
-		}
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            DisposeDataReaders();
+        }
+
+        private void DisposeDataReaders()
+        {
+            if (dataReaders.Count > 0)
+            {
+                foreach (IDataReader dataReader in dataReaders)
+                {
+                    dataReaders.Remove(dataReader);
+                    dataReader.Dispose();
+                }
+            }
+            dataReaders.Clear();
+        }
+
+        #endregion
 
 		public int Exec(String query)
 		{
-			disposeDataReaders();
+			DisposeDataReaders();
 			IDbCommand command = Conf.Driver.getCommand(query);
     		Int32 rowsaffected;
     		
-		    try
-		    {
-		    	rowsaffected = command.ExecuteNonQuery();
-		    } finally {
-                command.Connection.Close();		   
-		    }
+	    	rowsaffected = command.ExecuteNonQuery();
+
 		    return rowsaffected;
 		}
 		
 		public int ExecSys(String query)
 		{
-			disposeDataReaders();
+			DisposeDataReaders();
 			IDbCommand command = Conf.Driver.getSystemCommand(query);
     		Int32 rowsaffected;
     		
-		    try
-		    {
-		    	rowsaffected = command.ExecuteNonQuery();
-		    } finally {
-		   
-		    }
+        	rowsaffected = command.ExecuteNonQuery();
+		    
 		    return rowsaffected;
-    		}
+    	}
 		
 		public IDataReader Query(String query)
 		{
-			disposeDataReaders();
+			DisposeDataReaders();
 		    IDbCommand command = Conf.Driver.getCommand(query);
-			IDataReader dr = command.ExecuteReader(CommandBehavior.CloseConnection);
+			IDataReader dr = command.ExecuteReader(/*CommandBehavior.CloseConnection*/);
 			
 			return dr;
 		}
 
         public IDataReader Query(CommandType cmdType, string query, IDataParameter[] Params) 
 		{
-            disposeDataReaders();
+            DisposeDataReaders();
             IDbCommand command = Conf.Driver.getCommand(query);
 
             //command.CommandText = query;
@@ -158,18 +170,18 @@ namespace CsDO.Lib
                 }
             }
 
-            IDataReader dr = command.ExecuteReader(CommandBehavior.CloseConnection);
+            IDataReader dr = command.ExecuteReader(/*CommandBehavior.CloseConnection*/);
 
             return dr;
         }	
 
         public DataSet QueryDS(CommandType cmdType, string query, IDataParameter[] Params) 
 		{
-            disposeDataReaders();
+            DisposeDataReaders();
             IDbCommand command = Conf.Driver.getCommand(query);
             IDataAdapter da = Conf.Driver.getDataAdapter(command);
             DataSet ds = new DataSet();
-            
+            command.CommandTimeout = 90;
             command.CommandType = cmdType;
             try
             {
@@ -188,15 +200,16 @@ namespace CsDO.Lib
                 da.Fill(ds);
 
                 command.Parameters.Clear();
-                command.Connection.Dispose();
             }
             catch (Exception ex)
             {
-                command.Connection.Dispose();
+                da = null;
+                ds.Clear();
+                ds = null;
                 throw (ex);
             }
 
             return ds;
-        }	
-	}
+        }
+    }
 }

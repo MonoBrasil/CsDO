@@ -53,7 +53,6 @@ namespace CsDO.Lib
 		
 		protected static string GetProperty(string property)
 		{
-
 			string[] connectionString;
 				
 			if (driverConnection == DBMS.None)

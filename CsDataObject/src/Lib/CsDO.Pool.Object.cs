@@ -50,6 +50,7 @@ namespace CsDO.Lib
                     return null;
                 }
             }
+
             set
             {
                 if (pool.Contains(key))
