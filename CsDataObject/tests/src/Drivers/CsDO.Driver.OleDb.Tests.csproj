@@ -94,15 +94,6 @@
     <Reference Include="System.Xml">
       <Name>System.XML</Name>
     </Reference>
-    <ProjectReference Include="..\..\..\src\Drivers\CsDO.Driver.OleDb.csproj">
-      <Name>CsDO.Driver.OleDb</Name>
-      <Project>{A85D143A-0FEE-4F35-AE08-E3E35133B2AE}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\src\Lib\CsDo.Lib.csproj">
-      <Project>{29291966-F3A0-4F7A-816F-9376E5AF32BF}</Project>
-      <Name>CsDo.Lib</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs">
@@ -111,6 +102,16 @@
     <Compile Include="CsDO.Driver.OleDb.Tests.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Drivers\CsDO.Driver.OleDb.csproj">
+      <Project>{A85D143A-0FEE-4F35-AE08-E3E35133B2AE}</Project>
+      <Name>CsDO.Driver.OleDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\src\Lib\CsDo.Lib.csproj">
+      <Project>{29291966-F3A0-4F7A-816F-9376E5AF32BF}</Project>
+      <Name>CsDo.Lib</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

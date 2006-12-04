@@ -102,14 +102,6 @@
     <Reference Include="System.Xml">
       <Name>System.XML</Name>
     </Reference>
-    <ProjectReference Include="..\..\..\src\Drivers\CsDO.Driver.Npgsql.csproj">
-      <Project>{592CFDA5-2A05-459D-B6C1-EBB5599CA6EA}</Project>
-      <Name>CsDO.Driver.Npgsql</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\src\Lib\CsDo.Lib.csproj">
-      <Project>{29291966-F3A0-4F7A-816F-9376E5AF32BF}</Project>
-      <Name>CsDo.Lib</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs">
@@ -118,6 +110,16 @@
     <Compile Include="CsDO.Driver.Npgsql.Tests.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Drivers\CsDO.Driver.Npgsql.csproj">
+      <Project>{592CFDA5-2A05-459D-B6C1-EBB5599CA6EA}</Project>
+      <Name>CsDO.Driver.Npgsql</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\src\Lib\CsDo.Lib.csproj">
+      <Project>{29291966-F3A0-4F7A-816F-9376E5AF32BF}</Project>
+      <Name>CsDo.Lib</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

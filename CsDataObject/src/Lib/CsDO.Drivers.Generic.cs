@@ -55,6 +55,8 @@ namespace CsDO.Drivers
 	{
         IDbConnection conn = null;
 
+        public IDbConnection Connection { get { return getConnection(); } }
+
 		public Generic() {}
 
 		public IDbCommand getCommand(String sql) {
@@ -62,7 +64,7 @@ namespace CsDO.Drivers
             if (command != null)
             {
                 command.CommandText = sql;
-                conn = objectConnection();
+                conn = getConnection();
                 try
                 {
                     command.Connection = conn;
@@ -73,17 +75,19 @@ namespace CsDO.Drivers
                         command.Connection.Open();
                     }
                 }
-                catch (DataException e)
+                catch (DataException)
                 {
                     conn.Dispose();
                 }
             }
+            else
+                command.Connection = getConnection();
 			return command;
 		}
 
-        public IDataAdapter getDataAdapter(IDbCommand command)
+        public IDbDataAdapter getDataAdapter(IDbCommand command)
         {
-            IDataAdapter da = objectDataAdapter(command);
+            IDbDataAdapter da = objectDataAdapter(command);
             return da;
         }
 		
@@ -91,11 +95,22 @@ namespace CsDO.Drivers
 			return this.getCommand(sql);
 		}
 
-        private IDbConnection conexao = null;
+        public IDbConnection getConnection()
+        {
+            if (conn == null)
+            {
+                if (ConfigurationManager.AppSettings["connection"] != null)
+                {
+                    return getConnection(ConfigurationManager.AppSettings["connection"].ToString());
+                }
+            }
 
-		protected IDbConnection objectConnection() {
-            if (conexao != null)
-                return conexao;
+            return conn;
+        }
+
+		protected IDbConnection getConnection(string URL) {
+            if (conn != null)
+                return conn;
 
 			Assembly assembly;
 			string prefix;
@@ -122,25 +137,23 @@ namespace CsDO.Drivers
 
 						if (namespaces[namespaces.Length - 1] == prefix) {
 							string obj = tipo.Namespace + "." + tipo.Name;
-							conexao = (IDbConnection) assCon.CreateInstance(obj);
+                            conn = (IDbConnection)assCon.CreateInstance(obj);
 							break;
 						}
 					}
 					else {
 						string obj = tipo.Namespace + "." + tipo.Name;
-						conexao = (IDbConnection) assCon.CreateInstance(obj);
+                        conn = (IDbConnection)assCon.CreateInstance(obj);
 						break;
 					}
 				}
 			}
-			if (conexao != null) {
-                if (ConfigurationManager.AppSettings["connection"] != null)
-                {
-                    conexao.ConnectionString = ConfigurationManager.AppSettings["connection"].ToString();
-				}
+            if (URL != null)
+            {
+                conn.ConnectionString = URL;
 			}
 
-			return conexao;
+            return conn;
 
 		}
 
@@ -248,32 +261,23 @@ namespace CsDO.Drivers
                         if (namespaces[namespaces.Length - 1] == prefix)
                         {
                             string obj = tipo.Namespace + "." + tipo.Name;
-                            return dataAdapter = (IDbDataAdapter)assCon.CreateInstance(obj,
-                                                                                false,
-                                                                                BindingFlags.InvokeMethod,
-                                                                                null,
-                                                                                new object[] { command },
-                                                                                null,
-                                                                                null
-                                                                                );
+                            return dataAdapter = (IDbDataAdapter)assCon.
+                                CreateInstance(obj, false, BindingFlags.InvokeMethod,
+                                    null, new object[] { command }, null, null);
                         }
                     }
                     else
                     {
                         string obj = tipo.Namespace + "." + tipo.Name;
-                        return dataAdapter = (IDbDataAdapter)assCon.CreateInstance(obj,
-                                                                            false,
-                                                                            BindingFlags.InvokeMethod,
-                                                                            null,
-                                                                            new object[] {command},
-                                                                            null,
-                                                                            null
-                                                                            );
+                        return dataAdapter = (IDbDataAdapter)assCon.
+                            CreateInstance(obj, false, BindingFlags.InvokeMethod,
+                                null, new object[] {command}, null, null);
                     }
                 }
             }
             return dataAdapter;
         }
+
 
 
         #region IDisposable Members
@@ -282,6 +286,59 @@ namespace CsDO.Drivers
         {
             if (conn != null)
                 conn.Dispose();
+        }
+
+        #endregion
+
+        #region IDataBase Members
+
+        public DataTable getSchema()
+        {
+            try
+            {
+                return (DataTable) conn.GetType().InvokeMember("GetSchema", BindingFlags.InvokeMethod, null, conn, new object[] {});
+            }
+            catch (Exception)
+            {
+                return new DataTable();
+            }
+        }
+
+        public DataTable getSchema(string collectionName)
+        {
+            try
+            {
+                return (DataTable)conn.GetType().InvokeMember("GetSchema", BindingFlags.InvokeMethod, null, conn, new object[] { collectionName });
+            }
+            catch (Exception)
+            {
+                return new DataTable();
+            }
+        }
+
+        public DataTable getSchema(string collectionName, string[] restrictions)
+        {
+            try
+            {
+                return (DataTable)conn.GetType().InvokeMember("GetSchema", BindingFlags.InvokeMethod, null, conn, new object[] { collectionName, restrictions });
+            }
+            catch (Exception)
+            {
+                return new DataTable();
+            }
+        }
+
+
+        public void open(string URL)
+        {
+            conn = getConnection(URL);
+            conn.Open();
+        }
+
+        public void close()
+        {
+            if (conn != null)
+                conn.Close();
         }
 
         #endregion

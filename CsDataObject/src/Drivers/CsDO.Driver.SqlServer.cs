@@ -52,7 +52,9 @@ namespace CsDO.Drivers.SqlServer
 	public class SqlServerDriver : IDataBase
 	{
 		private SqlConnection conn = null;
-		private string connectionString = null;	
+		private string connectionString = null;
+
+        public IDbConnection Connection { get { return conn; } }
 
 		public SqlServerDriver() {
 			this.connectionString = Config.GetDbConectionString(Config.DBMS.MSSQLServer);
@@ -73,6 +75,21 @@ namespace CsDO.Drivers.SqlServer
 			return getUrl();
 		}
 
+        public DataTable getSchema()
+        {
+            return conn.GetSchema();
+        }
+
+        public DataTable getSchema(string collectionName)
+        {
+            return conn.GetSchema(collectionName);
+        }
+
+        public DataTable getSchema(string collectionName, string[] restrictions)
+        {
+            return conn.GetSchema(collectionName, restrictions);
+        }
+
 		public IDbCommand getCommand(String sql)
 		{
 
@@ -84,26 +101,26 @@ namespace CsDO.Drivers.SqlServer
 			return new SqlCommand(sql, (SqlConnection) getSystemConnection());
 		}
 
-        public IDataAdapter getDataAdapter(IDbCommand command)
+        public IDbDataAdapter getDataAdapter(IDbCommand command)
         {
             return new SqlDataAdapter((SqlCommand) command);
         }
 
-		protected IDbConnection getConnection()
+		public IDbConnection getConnection()
 		{
 			open(getUrl());
 
 			return conn;
 		}
 
-		protected IDbConnection getSystemConnection()
+		public IDbConnection getSystemConnection()
 		{
 			open(getUrlSys());
 
 			return conn;
 		}
 		
-		protected void open(string URL) 
+		public void open(string URL) 
 	  	{
             try
             {
@@ -122,13 +139,13 @@ namespace CsDO.Drivers.SqlServer
                     }
                 }
             }
-            catch (DataException e)
+            catch (DataException)
             {
                 conn.Dispose();
             }
 		}
 
-		protected void close()
+		public void close()
 		{
 			if (conn != null)
 				conn.Close();

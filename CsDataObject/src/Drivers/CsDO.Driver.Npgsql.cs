@@ -54,6 +54,8 @@ namespace CsDO.Drivers.Npgsql
 		private NpgsqlConnection conn = null;
 		private string connectionString = null;
 
+        public IDbConnection Connection { get { return conn; } }
+
 		public NpgsqlDriver() {
 			this.connectionString = Config.GetDbConectionString(Config.DBMS.PostgreSQL);
 		}
@@ -83,7 +85,22 @@ namespace CsDO.Drivers.Npgsql
 			return new NpgsqlCommand(sql, (NpgsqlConnection) getSystemConnection());
 		}
 
-		protected IDbConnection getConnection() 
+        public DataTable getSchema()
+        {
+            return conn.GetSchema();
+        }
+
+        public DataTable getSchema(string collectionName)
+        {
+            return conn.GetSchema(collectionName);
+        }
+
+        public DataTable getSchema(string collectionName, string[] restrictions)
+        {
+            return conn.GetSchema(collectionName, restrictions);
+        }
+
+		public IDbConnection getConnection() 
 		{	
 			if (conn == null)
     			open(getUrl());
@@ -91,7 +108,7 @@ namespace CsDO.Drivers.Npgsql
 		    	return conn;
 		}
 
-		protected IDbConnection getSystemConnection() 
+        public IDbConnection getSystemConnection() 
 		{	
 			if (conn == null)
     			open(getUrlSys());
@@ -99,18 +116,18 @@ namespace CsDO.Drivers.Npgsql
 			return conn;
 		}
 
-        public IDataAdapter getDataAdapter(IDbCommand command)
+        public IDbDataAdapter getDataAdapter(IDbCommand command)
         {
             return new NpgsqlDataAdapter((NpgsqlCommand)command);
         }
 
-		protected void open(string URL) 
+		public void open(string URL) 
 	  	{
 			conn = new NpgsqlConnection(URL);
 	  		conn.Open();
 		}
 
-		protected void close()
+        public void close()
 		{
 			if (conn != null)
 				conn.Close();

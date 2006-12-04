@@ -87,7 +87,14 @@ namespace CsDO.Lib
     {
         IDbCommand getCommand(String sql);
         IDbCommand getSystemCommand(String sql);
-        IDataAdapter getDataAdapter(IDbCommand command);
+        IDbDataAdapter getDataAdapter(IDbCommand command);
+        IDbConnection getConnection();
+        void open(string URL);
+        void close();
+        IDbConnection Connection { get; }
+        DataTable getSchema();
+        DataTable getSchema(string collectionName);
+        DataTable getSchema(string collectionName, string[] restrictions);
     } 
 
     #endregion
@@ -130,7 +137,31 @@ namespace CsDO.Lib
 
 		    return rowsaffected;
 		}
-		
+
+        public int Exec(string query, IDataParameter[] Params)
+        {
+            DisposeDataReaders();
+            IDbCommand command = Conf.Driver.getCommand(query);
+
+            if (Params != null)
+            {
+                foreach (IDataParameter param in Params)
+                {
+                    if (param.Value == null)
+                        param.Value = DBNull.Value;
+
+                    if (command.Parameters.Contains(param))
+                        command.Parameters[param.ParameterName] = param;
+                    else
+                        command.Parameters.Add(param);
+                }
+            }
+
+            int result = command.ExecuteNonQuery();
+
+            return result;
+        }
+
 		public int ExecSys(String query)
 		{
 			DisposeDataReaders();
@@ -163,6 +194,9 @@ namespace CsDO.Lib
             {
                 foreach (IDataParameter param in Params)
                 {
+                    if (param.Value == null)
+                        param.Value = DBNull.Value;
+
                     if (command.Parameters.Contains(param))
                         command.Parameters[param.ParameterName] = param;
                     else

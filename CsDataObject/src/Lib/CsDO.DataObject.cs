@@ -70,12 +70,13 @@ namespace CsDO.Lib
         Disposed,
     }
 
-	[Serializable()]
-    public class DataObject: IDisposable, ICloneable
+    [Serializable()]
+	public class DataObject: IDisposable, ICloneable
 	{
 		#region Properties
 		private bool debug = false;
 
+        [NonSerialized()]
 		private IDataReader dr;
 
 		private bool _persisted = false;
@@ -92,6 +93,13 @@ namespace CsDO.Lib
         protected event AutoIncrement autoIncrement = null;
       //  protected event Identity identity = null; //for SQL SERVER
 
+
+        [Column(false)]
+        public int Depth
+        {
+            get { return depth; }
+            set { depth = value; }
+        }
 
 		[Column(false)]
 		protected string Table
@@ -694,7 +702,7 @@ namespace CsDO.Lib
                         }
                         else
                         {
-                            val = assertField(val, propriedade);
+                            val = assertField(null, propriedade);
 
                             if (debug)
                                 Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + val + "(" + val.GetType() + ")");
@@ -725,7 +733,11 @@ namespace CsDO.Lib
                     val = assertField(val, propriedade);
 
 					if (debug)
-						Console.WriteLine("Set "+ GetType() +"[" + this + "]." + propriedade.Name+"="+val+"(" +val.GetType()+ ")");
+                        if (val != null)
+						    Console.WriteLine("Set "+ GetType() +"[" + this + "]." + propriedade.Name+"="+val+"(" +val.GetType()+ ")");
+                        else
+                            Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + val);
+
 					propriedade.SetValue(this, val, null);
                     return;
 				}
@@ -748,8 +760,8 @@ namespace CsDO.Lib
             {
                 val = float.Parse(((double)val).ToString());
             }
-            else if (val.GetType().IsSubclassOf(typeof(DBNull))
-            || val.GetType() == typeof(DBNull))
+            else if (val != null && (val.GetType().IsSubclassOf(typeof(DBNull))
+            || val.GetType() == typeof(DBNull)))
             {
                 if (propriedade.PropertyType == typeof(byte) ||
                     propriedade.PropertyType == typeof(int) ||
@@ -1220,19 +1232,26 @@ namespace CsDO.Lib
 		public bool fetch()
 		{
 			if ((dr != null) && !dr.IsClosed) {
-				bool result = dr.Read();
-				if (debug) {
-					if (result)
-						Console.WriteLine("*** Reading DataReader and loading fields ...");
-					else
-						Console.WriteLine("*** Closing DataReader ...");
-				}
-				if (!result) {
-					dr.Close();
-				} else
-					loadFields(dr, this);
 
-				return result;
+                bool result = dr.Read();
+                if (debug)
+                {
+                    if (result)
+                        Console.WriteLine("*** Reading DataReader and loading fields ...");
+                    else
+                        Console.WriteLine("*** Closing DataReader ...");
+                }
+                
+                if (!result)
+                {
+                    dr.Close();
+                }
+                else
+                {
+                    loadFields(dr, this);
+                }
+
+                return result;
 			}
 			
 			if (debug) {

@@ -52,7 +52,9 @@ namespace CsDO.Drivers.OleDb
 	public class OleDbDriver : IDataBase
 	{
 		private OleDbConnection conn = null;
-		private string connectionString = null;	
+		private string connectionString = null;
+
+        public IDbConnection Connection { get { return conn; } }
 
 		public OleDbDriver() {
 			this.connectionString = Config.GetDbConectionString(Config.DBMS.OleDB);
@@ -62,7 +64,7 @@ namespace CsDO.Drivers.OleDb
 			this.connectionString = "Provider="+provider+";Data Source="+dataSource+";"+ "User ID="+userId+";Password="+password;
 		}
         
-        public IDataAdapter getDataAdapter(IDbCommand command)
+        public IDbDataAdapter getDataAdapter(IDbCommand command)
         {
             return new OleDbDataAdapter((OleDbCommand)command);
         }
@@ -77,6 +79,21 @@ namespace CsDO.Drivers.OleDb
 			return getUrl() +";Jet OLEDB:System Database=system.mdw;";
 		}
 
+        public DataTable getSchema()
+        {
+            return conn.GetSchema();
+        }
+
+        public DataTable getSchema(string collectionName)
+        {
+            return conn.GetSchema(collectionName);
+        }
+
+        public DataTable getSchema(string collectionName, string[] restrictions)
+        {
+            return conn.GetSchema(collectionName, restrictions);
+        }
+
 		public IDbCommand getCommand(String sql) 
 		{	
 			return new OleDbCommand(sql, (OleDbConnection) getConnection());
@@ -87,7 +104,7 @@ namespace CsDO.Drivers.OleDb
 			return new OleDbCommand(sql, (OleDbConnection) getSystemConnection());
 		}
 
-		protected IDbConnection getConnection() 
+		public IDbConnection getConnection() 
 		{	
 			if (conn == null)
     			open(getUrl());
@@ -95,7 +112,7 @@ namespace CsDO.Drivers.OleDb
 		    	return conn;
 		}
 
-		protected IDbConnection getSystemConnection() 
+		public IDbConnection getSystemConnection() 
 		{	
 			if (conn == null)
     			open(getUrlSys());
@@ -103,13 +120,13 @@ namespace CsDO.Drivers.OleDb
 			return conn;
 		}
 		
-		protected void open(string URL) 
+		public void open(string URL) 
 	  	{
 			conn = new OleDbConnection(URL);
 	  		conn.Open();
 		}
 
-		protected void close()
+		public void close()
 		{
 			if (conn != null)
 				conn.Close();

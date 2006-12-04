@@ -94,15 +94,6 @@
     <Reference Include="System.Xml">
       <Name>System.XML</Name>
     </Reference>
-    <ProjectReference Include="..\..\..\src\Drivers\CsDO.Driver.SqlServer.csproj">
-      <Name>CsDO.Driver.SqlServer</Name>
-      <Project>{78045090-9CBE-4BD0-A03F-C881C3194BF8}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\src\Lib\CsDo.Lib.csproj">
-      <Project>{29291966-F3A0-4F7A-816F-9376E5AF32BF}</Project>
-      <Name>CsDo.Lib</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs">
@@ -111,6 +102,16 @@
     <Compile Include="CsDO.Driver.SqlServer.Tests.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Drivers\CsDO.Driver.SqlServer.csproj">
+      <Project>{78045090-9CBE-4BD0-A03F-C881C3194BF8}</Project>
+      <Name>CsDO.Driver.SqlServer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\src\Lib\CsDo.Lib.csproj">
+      <Project>{29291966-F3A0-4F7A-816F-9376E5AF32BF}</Project>
+      <Name>CsDo.Lib</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
