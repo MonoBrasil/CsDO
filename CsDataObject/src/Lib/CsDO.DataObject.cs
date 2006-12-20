@@ -45,11 +45,18 @@ using System.Collections;
 using System.Data;
 using System.Globalization;
 using System.Reflection;
+using System.Text;
 
 namespace CsDO.Lib
 {
-	public delegate int AutoIncrement(DataObject table);
+
+    #region Delegates
+    public delegate int AutoIncrement(DataObject table);
+
+    public delegate void OnBeforeManipulation(DataObject sender);
+    public delegate void OnAfterManipulation(DataObject sender, bool success);
     //public delegate int Identity(DataObject table);
+    #endregion
 
     /// <summary>
     /// Represents current state of disposable object.
@@ -90,10 +97,6 @@ namespace CsDO.Lib
 		private IList _foreignKeys = null;
         private int depth = 3;
 
-        protected event AutoIncrement autoIncrement = null;
-      //  protected event Identity identity = null; //for SQL SERVER
-
-
         [Column(false)]
         public int Depth
         {
@@ -122,7 +125,7 @@ namespace CsDO.Lib
 		protected string Fields {
 			get {
 				if (_fields == null) {
-					_fields = "";
+					StringBuilder fields = new StringBuilder();
 					PropertyInfo [] props = GetType().GetProperties();
 					
 					foreach (PropertyInfo propriedade in props)
@@ -137,10 +140,12 @@ namespace CsDO.Lib
 						
 						if (name == null)
 							name = propriedade.Name;
-						
-						_fields += name + ",";
+
+                        fields.Append(name);
+                        fields.Append(",");
 					}
-					_fields = _fields.Substring(0, _fields.Length -1);
+					fields.Remove(fields.Length -1, 1);
+                    _fields = fields.ToString();
 				}
 				
 				return _fields;
@@ -150,7 +155,7 @@ namespace CsDO.Lib
 		protected string ActiveFields {
 			get 
             {
-                string _active_fields = "";
+                StringBuilder _active_fields = new StringBuilder();
 				PropertyInfo [] props = GetType().GetProperties();
 				
 				
@@ -191,12 +196,13 @@ namespace CsDO.Lib
 					if (name == null)
 						name = propriedade.Name;
 
-                    _active_fields += name + ",";
+                    _active_fields.Append(name);
+                    _active_fields.Append(",");
 				}
                 if (_active_fields.Length > 0)
-                    _active_fields = _active_fields.Substring(0, _active_fields.Length - 1);
+                    _active_fields.Remove(_active_fields.Length - 1, 1);
 
-                return _active_fields;
+                return _active_fields.ToString();
 			}
 		}
 
@@ -301,7 +307,10 @@ namespace CsDO.Lib
             if (dr != null && !dr.IsClosed)
                 dr.Close();
 
-            string sql = "SELECT " + Fields + " FROM " + Table;
+            StringBuilder sql = new StringBuilder("SELECT ");
+            sql.Append(Fields);
+            sql.Append(" FROM ");
+            sql.Append(Table);
             bool found = false;
 
             PropertyInfo propriedade = findColumn(column);
@@ -311,14 +320,15 @@ namespace CsDO.Lib
                 string name = null;
                 getColumnProperties(propriedade, ref name);
 
-                sql += " WHERE " + name;
+                sql.Append(" WHERE ");
+                sql.Append(name);
 
                 if (propriedade.PropertyType == typeof(System.String))
-                    sql += " LIKE ";
+                    sql.Append(" LIKE ");
                 else
-                    sql += " = ";
+                    sql.Append(" = ");
 
-                sql += formatObject(whereValue);
+                sql.Append(formatObject(whereValue));
 
                 found = true;
             }
@@ -328,14 +338,14 @@ namespace CsDO.Lib
                 throw new CsDOException("Field '" + column + "' not found!");
             }
 
-            AddModifiers(ref sql);
+            AddModifiers(sql);
 
             try
             {
                 if (debug)
                     Console.WriteLine("Query: \"" + sql + "\"");
 
-                dr = DataBase.New().Query(sql);
+                dr = DataBase.New().Query(sql.ToString());
             }
             catch (Exception e)
             {
@@ -404,19 +414,16 @@ namespace CsDO.Lib
 			if (dr != null && obj != null) {
                 if (Conf.DataPooling)
                 {
-                    DataObject result = Conf.DataPool[obj.GetType().ToString() + "!" +
-                        dr[getPrimaryKeyName()]];
+                    StringBuilder sb = new StringBuilder();
+                    sb.Append(obj.GetType().ToString());
+                    sb.Append("!");
+                    sb.Append(dr[getPrimaryKeyName()]);
+                    DataObject result = Conf.DataPool[sb.ToString()];
                     if (result != null)
                         result.Copy(obj);
                     else
                     {
-                        for (int i = 0; i < dr.FieldCount; i++)
-                        {
-                            if (debug)
-                                Console.WriteLine("Loading field[" + i + "](" + dr.GetName(i) + ")=" + dr[i] + "[" + dr[i].GetType() + "] from " + GetType());
-
-                            obj.setField(dr.GetName(i), dr[i]);
-                        }
+                        obj.setField(dr);
 
                         Persisted = true;
                         if (Conf.DataPooling)
@@ -432,13 +439,7 @@ namespace CsDO.Lib
                 }
                 else
                 {
-                    for (int i = 0; i < dr.FieldCount; i++)
-                    {
-                        if (debug)
-                            Console.WriteLine("Loading field[" + i + "](" + dr.GetName(i) + ")=" + dr[i] + "[" + dr[i].GetType() + "] from " + GetType());
-
-                        obj.setField(dr.GetName(i), dr[i]);
-                    }
+                    obj.setField(dr);
 
                     Persisted = true;
                     if (Conf.DataPooling)
@@ -456,25 +457,41 @@ namespace CsDO.Lib
 			}
 		}
 		
-		protected void AddModifiers(ref string sql)
+		protected void AddModifiers(StringBuilder sb)
 		{
-			if (Where != null && !Where.Trim().Equals(""))
-			{	
-				if (sql.ToUpper().IndexOf("WHERE") > -1)
-					sql += " AND " + Where;
-				else
-					sql += " WHERE " + Where;
-			}
-					
-			if (OrderBy != null && !OrderBy.Trim().Equals(""))
-				sql += " ORDER BY " + OrderBy;
-			
-			if (GroupBy != null && !GroupBy.Trim().Equals(""))
-				sql += " GROUP BY " + GroupBy;
+            string sql = sb.ToString();
 
-			if (Limit != null && !Limit.Trim().Equals(""))
-				sql += " LIMIT " + Limit;
-			
+            if (Where != null && !Where.Trim().Equals(""))
+			{
+                if (sql.ToUpper().IndexOf("WHERE") > -1)
+                {
+                    sb.Append(" AND ");
+                    sb.Append(Where);
+                }
+                else
+                {
+                    sb.Append(" WHERE ");
+                    sb.Append(Where);
+                }
+			}
+
+            if (OrderBy != null && !OrderBy.Trim().Equals(""))
+            {
+                sb.Append(" ORDER BY ");
+                sb.Append(OrderBy);
+            }
+
+            if (GroupBy != null && !GroupBy.Trim().Equals(""))
+            {
+                sb.Append(" GROUP BY ");
+                sb.Append(GroupBy);
+            }
+
+            if (Limit != null && !Limit.Trim().Equals(""))
+            {
+                sb.Append(" LIMIT ");
+                sb.Append(Limit);
+            }
 		}
 
 		public IList ToArray()
@@ -509,15 +526,17 @@ namespace CsDO.Lib
 
 		public override string ToString()
 		{
-            string result = this.GetType().ToString() + "!";
+            StringBuilder result = new StringBuilder();
+            result.Append(this.GetType().ToString());
+            result.Append("!");
 
 			if (PrimaryKeys.Count > 0) {						
-				result += formatValue((PropertyInfo) PrimaryKeys[0]);
+				result.Append(formatValue((PropertyInfo) PrimaryKeys[0]));
 			} else {
-				result += formatValue((PropertyInfo) GetType().GetProperties()[0]);
+				result.Append(formatValue((PropertyInfo) GetType().GetProperties()[0]));
 			}
 
-            return result;				
+            return result.ToString();				
 		}
 
 		protected PropertyInfo findColumn(string column) {
@@ -563,7 +582,15 @@ namespace CsDO.Lib
                 {
                     if (valueObj.GetType() == typeof(System.String))
                     {
-                        result = (valueObj != null) ? "'" + valueObj.ToString() + "'" : null;
+                        if (valueObj != null)
+                        {
+                            StringBuilder sb = new StringBuilder("'");
+                            sb.Append(valueObj.ToString());
+                            sb.Append("'");
+                            result = sb.ToString();
+                        }
+                        else
+                            result = null;
                     }
                     else if (valueObj.GetType() == typeof(System.Int16) ||
                                valueObj.GetType() == typeof(System.Int32) ||
@@ -585,7 +612,15 @@ namespace CsDO.Lib
                     }
                     else if (valueObj.GetType() == typeof(System.DateTime))
                     {
-                        result = (valueObj != null) ? "'" + ((DateTime)valueObj).ToString("yyyyMMdd HH:mm:ss") + "'" : null;
+                        if (valueObj != null)
+                        {
+                            StringBuilder sb = new StringBuilder("'");
+                            sb.Append(((DateTime)valueObj).ToString("yyyyMMdd HH:mm:ss"));
+                            sb.Append("'");
+                            result = sb.ToString();
+                        }
+                        else
+                            result = null;
                     }
                     else if (valueObj.GetType().IsSubclassOf(typeof(DataObject)))
                     {
@@ -676,6 +711,104 @@ namespace CsDO.Lib
 			}
 		}
 		
+		protected void setField(IDataReader dr)
+		{
+			PropertyInfo [] props =  GetType().GetProperties();
+			bool persist = false;
+			
+			foreach (PropertyInfo propriedade in props)
+			{			
+				string name = null;
+				getColumnProperties(propriedade, ref name, ref persist);
+				
+				if (!persist)
+					continue;
+					
+				if (String.IsNullOrEmpty(name))
+					name = propriedade.Name;
+
+				object val = dr[name];
+				
+			    if (propriedade != null)
+			    {			
+                    #region Property holds a Foreign Key
+                    if (propriedade.PropertyType.IsSubclassOf(typeof(DataObject)) &&
+                                    !val.GetType().IsSubclassOf(typeof(DataObject)))
+                    {
+                        if (val == null || val.ToString().Equals("0") || val.GetType() == typeof(DBNull))
+                        {
+                            if (debug)
+                                Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=null(" + val.GetType() + ")");
+                            propriedade.SetValue(this, null, null);
+                            continue;
+                        }
+
+                        DataObject obj = (DataObject)propriedade.GetValue(this, null);
+                        if (obj == null)
+                        {
+                            if (debug)
+                                Console.WriteLine("Activating: " + propriedade.PropertyType);
+                            if (depth > 0)
+                            {
+                                obj = (DataObject)Activator.CreateInstance(propriedade.PropertyType);
+                                obj.depth = this.depth - 1;
+                            }
+                            else
+                            {
+                                val = assertField(null, propriedade);
+
+                                if (debug)
+                                    Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + val + "(" + val.GetType() + ")");
+                                propriedade.SetValue(this, val, null);
+                                continue;
+                            }
+                        }
+
+                        if (obj.PrimaryKeys.Count > 0)
+                        {
+                            if (debug)
+                                Console.WriteLine("Set " + obj.GetType() + "[" + obj + "]." + ((PropertyInfo)obj.PrimaryKeys[0]).Name + "=" + val + "(" + val.GetType() + ")");
+                            ((PropertyInfo)obj.PrimaryKeys[0]).SetValue(obj, val, null);
+                            obj.find();
+                            obj.fetch();
+                            if (!obj.AssertField(((PropertyInfo)obj.PrimaryKeys[0]).Name, val))
+                            {
+                                if (debug)
+                                    Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=null(" + val.GetType() + ")");
+                                propriedade.SetValue(this, null, null);
+                            }
+                            else
+                            {
+                                if (debug)
+                                    Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + obj + "(" + obj.GetType() + ")");
+                                propriedade.SetValue(this, obj, null);
+                            }
+                        }
+                        else
+                            throw new CsDOException("Class '" + propriedade.PropertyType + "' has no Primary Key!");
+                        continue;
+                    }  
+                    #endregion
+                    else
+                    #region Property holds data
+                    {
+                        val = assertField(val, propriedade);
+
+                        if (debug)
+                            if (val != null)
+                                Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + val + "(" + val.GetType() + ")");
+                            else
+                                Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + val);
+
+                        propriedade.SetValue(this, val, null);
+                        continue;
+                    } 
+                    #endregion
+			    }
+			}
+		}
+		
+		//TODO: Eliminar mais tarde		
 		protected void setField(string col, object val)
 		{
 			PropertyInfo propriedade = findColumn(col);
@@ -714,7 +847,7 @@ namespace CsDO.Lib
 					if (obj.PrimaryKeys.Count > 0) {
 						if (debug)
 							Console.WriteLine("Set "+ obj.GetType() +"[" + obj + "]." + ((PropertyInfo) obj.PrimaryKeys[0]).Name+"=" + val + "(" + val.GetType() + ")");
-						obj.setField(((PropertyInfo) obj.PrimaryKeys[0]).Name, val);
+                        ((PropertyInfo)obj.PrimaryKeys[0]).SetValue(obj, val, null);
 						obj.find();
 						obj.fetch();
 						if (!obj.AssertField(((PropertyInfo) obj.PrimaryKeys[0]).Name, val)) {
@@ -852,15 +985,19 @@ namespace CsDO.Lib
 
 		public bool insert()
 		{
+            if (BeforeInsert != null)
+                BeforeInsert(this);
+
             PropertyInfo propriedadeIdentity = null;
             string ident = null;
             
-
 			if (dr != null && !dr.IsClosed)
 				dr.Close();
-				
-			string sql = "INSERT INTO " + Table;
-			string values = " Values (";
+
+            StringBuilder sql = new StringBuilder("INSERT INTO ");
+            sql.Append(Table);
+
+			StringBuilder values = new StringBuilder(" Values (");
 			
 			PropertyInfo [] props =  GetType().GetProperties();
 			
@@ -868,7 +1005,6 @@ namespace CsDO.Lib
 			{
 				bool persist = true;
 				string data = null;
-
 
 				getColumnProperties(propriedade, ref persist);
 
@@ -894,18 +1030,22 @@ namespace CsDO.Lib
                 }
 
 				data = formatValue(propriedade);
-								
-				if ((data != null) && !data.Equals("0")
-                    && !data.Equals("'00010101 00:00:00'") 
+
+                if ((data != null) && !data.Equals("0")
+                    && !data.Equals("'00010101 00:00:00'")
                     && !data.Equals("NULL"))
-					values += data + ",";
-        
-                
+                {
+                    values.Append(data);
+                    values.Append(",");
+                }
 			}
 			
-			values = values.Substring(0, values.Length -1);
-			values += ")";
-			sql += " (" + ActiveFields + ")" + values;
+			values.Remove(values.Length -1, 1);
+			values.Append(")");
+            sql.Append(" (");
+            sql.Append(ActiveFields);
+            sql.Append(")");
+            sql.Append(values);
 
             int i=0;
             
@@ -914,13 +1054,16 @@ namespace CsDO.Lib
 
             if (ident != null)
             {
-                sql += " SELECT " + ident + "=@@Identity FROM " + Table;
+                sql.Append(" SELECT ");
+                sql.Append(ident);
+                sql.Append("=@@Identity FROM ");
+                sql.Append(Table);
                 if (debug)
                     Console.WriteLine("Exec: \"" + sql + "\"");
 
                 //int cod = DataBase.New().Exec(sql);
                 int result = 0;   
-                IDataReader dr1 = DataBase.New().Query(sql);
+                IDataReader dr1 = DataBase.New().Query(sql.ToString());
                 if (dr1.Read())
                 {
                     if (debug)
@@ -939,8 +1082,8 @@ namespace CsDO.Lib
             else
             {
                 if (debug)
-                    Console.WriteLine("Exec: \"" + sql + "\"");
-                i = DataBase.New().Exec(sql);
+                    Console.WriteLine("Exec: \"" + sql.ToString() + "\"");
+                i = DataBase.New().Exec(sql.ToString());
                 if (Conf.DataPooling)
                     Conf.DataPool.add(this);
             }
@@ -949,7 +1092,11 @@ namespace CsDO.Lib
 				Console.WriteLine("Affected " + i +" rows");
 
 			Persisted = (i == 1);
-			return (i == 1);
+
+            if (AfterInsert != null)
+                AfterInsert(this, Persisted);
+
+			return (Persisted);
 		}
 
 		public bool deleteCascade()
@@ -981,12 +1128,14 @@ namespace CsDO.Lib
 
 		public bool delete()
 		{
+            if (BeforeDelete != null)
+                BeforeDelete(this);
+
 			if (dr != null && !dr.IsClosed)
 				dr.Close();
 			
-			string sql = "DELETE ";
-			string clausule = "";
-			string item = "";
+			StringBuilder sql = new StringBuilder("DELETE ");
+            StringBuilder clausule = new StringBuilder();
 			string search = "";
 			string operador = "";
 			bool hasWhere = false;
@@ -1019,10 +1168,17 @@ namespace CsDO.Lib
 				//TODO: Identificar o que foi alterado
 				if ((search != null) && !search.Equals("0"))
 				{
-					item = "("+ name + operador + search + ")";
+                    StringBuilder item = new StringBuilder();
+
+                    item.Append("(");
+                    item.Append(name);
+                    item.Append(operador);
+                    item.Append(search);
+                    item.Append(")");
 					hasWhere = true;
-					
-					clausule  += item + " AND ";
+
+                    clausule.Append(item);
+                    clausule.Append(" AND ");
 				}
 				
 				if (primaryKey)
@@ -1030,40 +1186,52 @@ namespace CsDO.Lib
 			}
 			
 			if (hasWhere) {
-				clausule = clausule.Substring(0, clausule.Length -4);
-				sql += "FROM " + Table + " WHERE " + clausule ;
+				clausule.Remove(clausule.Length - 4, 4);
+                sql.Append("FROM ");
+                sql.Append(Table);
+                sql.Append(" WHERE ");
+                sql.Append(clausule);
 			}
+
+            bool result = false;
 
 			if (hasWhere) {
 				try {
 					if (debug)
 						Console.WriteLine("Exec: \"" +sql +"\"");
-					int i = DataBase.New().Exec(sql);
+					int i = DataBase.New().Exec(sql.ToString());
 					if (debug)
 						Console.WriteLine("Affected " + i +" rows");
                     if (Conf.DataPooling)
                         Conf.DataPool.remove(this);
-					return (i == 1);
+					result = (i == 1);
 				} catch (Exception e) {
 					if (debug)
 						Console.WriteLine(e.Message + "\n" + e.StackTrace);
 					throw (e);
 				}
 			} else
-				return false;
+				result = false;
+
+            if (AfterDelete != null)
+                AfterDelete(this, result);
+
+            return result;
 		}
 		
 		public bool update()
 		{
+            if (BeforeUpdate != null)
+                BeforeUpdate(this);
+
 			if (dr != null && !dr.IsClosed)
 				dr.Close();
 			
-			string sql = "UPDATE ";
-			string clausule = "";
-			string item = "";
+			StringBuilder sql = new StringBuilder("UPDATE ");
+            StringBuilder clausule = new StringBuilder();
 			string search = "";
 			string operador = "";
-			string values = "";
+            StringBuilder values = new StringBuilder();
 			bool hasWhere = false;
 			
 			PropertyInfo [] props =  GetType().GetProperties();
@@ -1096,30 +1264,47 @@ namespace CsDO.Lib
                     && !search.Equals("'00010101 00:00:00'") 
                     && !search.Equals("NULL"))
 				{
-					item = "("+ name + operador + search + ")";
+                    StringBuilder item = new StringBuilder();
+                    
+                    item.Append("(");
+                    item.Append(name);
+                    item.Append(operador);
+                    item.Append(search);
+                    item.Append(")");
 					hasWhere = true;
-					
-					clausule  += item + " AND ";
-				} else if ((search != null) && !search.Equals("0")
+
+                    clausule.Append(item);
+                    clausule.Append(" AND ");
+                }
+                else if ((search != null) && !search.Equals("0")
                     && !search.Equals("'00010101 00:00:00'")
                     && !search.Equals("NULL"))
-
-					values += name + "=" + search + ",";
-				
+                {
+                    values.Append(name);
+                    values.Append("=");
+                    values.Append(search);
+                    values.Append(",");
+                }
 			}
 					
 			if (!values.Equals(""))
-				values = values.Substring(0, values.Length - 1);
+				values .Remove(values.Length - 1, 1);
 			
 			if (hasWhere) {
-				clausule = clausule.Substring(0, clausule.Length - 4);
-				sql += Table + " SET " + values + " WHERE " + clausule ;
+				clausule.Remove(clausule.Length - 4, 4);
+                sql.Append(Table);
+                sql.Append(" SET ");
+                sql.Append(values);
+                sql.Append(" WHERE ");
+                sql.Append(clausule);
 			}
+
+            bool result = false;
 
 			if (hasWhere) {
 				if (debug)
 					Console.WriteLine("Exec: \"" +sql +"\"");
-				int i = DataBase.New().Exec(sql);
+				int i = DataBase.New().Exec(sql.ToString());
 				if (debug)
 					Console.WriteLine("Affected " +i +" rows");
                 if (Conf.DataPooling)
@@ -1128,9 +1313,14 @@ namespace CsDO.Lib
                     Conf.DataPool.add(this);
                 }
 				Persisted = (i == 1);
-				return (i == 1);
+				result = (i == 1);
 			} else
-				return false;
+				result = false;
+
+            if (AfterUpdate != null)
+                AfterUpdate(this, result);
+
+            return result;
 		}
 		#endregion
 
@@ -1158,9 +1348,8 @@ namespace CsDO.Lib
 			if (dr != null && !dr.IsClosed)
 				dr.Close();
 			
-			string sql = "SELECT ";
-			string clausule = "";
-			string item = "";
+			StringBuilder sql = new StringBuilder("SELECT ");
+			StringBuilder clausule = new StringBuilder();
 			string search = "";
 			string operador = "";
 			bool hasWhere = false;
@@ -1195,30 +1384,46 @@ namespace CsDO.Lib
                     && !search.Equals("'00010101 00:00:00'")
                     && !search.Equals("NULL"))
 			        {
-				        item = "("+ name + operador + search + ")";
+                        StringBuilder item = new StringBuilder();
+                        item.Append("(");
+                        item.Append(name);
+                        item.Append(operador);
+                        item.Append(search);
+                        item.Append(")");
 				        hasWhere = true;
-    					
-				        clausule  += item + " AND ";
+
+                        clausule.Append(item);
+                        clausule.Append(" AND ");
 			        }
 				
 				if (primaryKey && (search != null) && !search.Equals("0")
                     && !search.Equals("00010101 00:00:00"))
 					break;
 			}
-					
-			if (hasWhere) {
-				clausule = clausule.Substring(0, clausule.Length -4);
-				sql += Fields + " FROM " + Table + " WHERE " + clausule ;
-			} else
-				sql += Fields + " FROM " + Table;
+
+            if (hasWhere)
+            {
+                clausule.Remove(clausule.Length - 4, 4);
+                sql.Append(Fields);
+                sql.Append(" FROM ");
+                sql.Append(Table);
+                sql.Append(" WHERE ");
+                sql.Append(clausule);
+            }
+            else
+            {
+                sql.Append(Fields);
+                sql.Append(" FROM ");
+                sql.Append(Table);
+            }
 			
-			AddModifiers(ref sql);
+			AddModifiers(sql);
 			
 			try 
 			{
 				if (debug)
 					Console.WriteLine("Query: \"" +sql +"\"");				
-				dr = DataBase.New().Query(sql);
+				dr = DataBase.New().Query(sql.ToString());
 			} catch(Exception e) {
 				if (debug)
 					Console.WriteLine("Exception: \"" + e.Message +"\"");
@@ -1248,7 +1453,14 @@ namespace CsDO.Lib
                 }
                 else
                 {
-                    loadFields(dr, this);
+                    if (BeforeFetch != null)
+                        BeforeFetch(this);
+
+                    result = loadFields(dr, this);
+
+                    if (AfterFetch != null)
+                        AfterFetch(this, result);
+
                 }
 
                 return result;
@@ -1319,22 +1531,22 @@ namespace CsDO.Lib
             Dispose(disposing);
             state = DisposableState.Disposed;
         }
-        /// <summary>
-        /// Releases all resources used by the object.
-        /// </summary>
         public void Dispose()
         {
             if (state == DisposableState.Alive)
             {
                 InternalDispose(true);
-                // Take yourself off of the Finalization queue 
-                // to prevent finalization code for this object
-                // from executing a second time.
                 GC.SuppressFinalize(this);
             }
         }
         protected void Dispose(bool disposing)
         {
+            if (_foreignKeys != null)
+                foreach (PropertyInfo foreign in _foreignKeys)
+                {
+                    if (foreign.PropertyType.IsSubclassOf(typeof(DataObject)))
+                        ((DataObject)foreign.GetValue(this, new object[] {})).Dispose();
+                }
         }
         ~DataObject()
         {
@@ -1371,6 +1583,23 @@ namespace CsDO.Lib
         {
             return State;
         }
+        #endregion
+
+        #region Events
+        //  protected event Identity identity = null; //for SQL SERVER
+        protected event AutoIncrement autoIncrement = null;
+
+        public event OnAfterManipulation  AfterDelete = null;
+        public event OnBeforeManipulation BeforeDelete = null;
+
+        public event OnAfterManipulation AfterInsert = null;
+        public event OnBeforeManipulation BeforeInsert = null;
+
+        public event OnAfterManipulation AfterUpdate = null;
+        public event OnBeforeManipulation BeforeUpdate = null;
+
+        public event OnAfterManipulation AfterFetch = null;
+        public event OnBeforeManipulation BeforeFetch= null;
         #endregion
 
         #region TODO
