@@ -135,7 +135,9 @@ namespace CsDO.Tests {
 			((MockDriver) Conf.Driver).addColumn("TesteObj", "Idade", typeof(Int32));
 			((MockDriver) Conf.Driver).addColumn("TesteObj", "Nome", typeof(string));
 			((MockDriver) Conf.Driver).addColumn("TesteObj", "PesoKg", typeof(Double));
-			((MockDriver) Conf.Driver).addColumn("TesteObj", "Teste1", typeof(Int32));
+		 	((MockDriver) Conf.Driver).addColumn("TesteObj", "Teste1", typeof(Int32));
+            ((MockDriver)Conf.Driver).addColumn("TesteObj", "Ativo", typeof(bool));
+            ((MockDriver)Conf.Driver).addColumn("TesteObj", "Aniversario", typeof(DateTime));
 			
 			DataRow data = ((MockDriver) Conf.Driver).newRow("TesteObj");
 			data["Cod"] = 1;
