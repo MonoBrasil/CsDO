@@ -103,27 +103,28 @@ namespace CsDO.CodeGenerator
         } 
         #endregion
 
-        private CodeTypeDeclaration CreateClass(string name, string alias)
+        private CodeTypeDeclaration CreateClass(ClassDefinition table)
         {
             CodeTypeDeclaration type = new CodeTypeDeclaration();
-            bool useAlias = !String.IsNullOrEmpty(alias);
 
-            type.Name = useAlias ? alias.Trim() : name.Trim();
+            type.Name = table.ToString();
             type.IsClass = true;
             type.IsPartial = true;
             type.BaseTypes.Add(new CodeTypeReference(typeof(CsDO.Lib.DataObject)));
-            if (useAlias)
+            type.CustomAttributes.Add(new CodeAttributeDeclaration("Serializable",
+                    new CodeAttributeArgument[] { }));
+            if (!String.IsNullOrEmpty(table.Alias) && !table.Table.Equals(table.Alias))
             {
                 type.CustomAttributes.Add(new CodeAttributeDeclaration("Table",
                     new CodeAttributeArgument[] {
-                            new CodeAttributeArgument(new CodePrimitiveExpression(name))
+                            new CodeAttributeArgument(new CodePrimitiveExpression(table.Table))
                         }));
             }
 
             #region class comments
             type.Comments.AddRange(InsertDocumentation(Documetation.Remarks, new string[]
                 {
-                    "Persistence class that maps table '" + name + "'",
+                    "Persistence class that maps table '" + table + "'",
                     "Warning: Each property maps a column, use the attribute",
                     "Column to mark properties that should not be persisted."
                 }));
@@ -145,18 +146,22 @@ namespace CsDO.CodeGenerator
         {
             CodeMemberField field = null;
 
-            Type type = definition.Type;
-
-            if (type.IsValueType)
+            if (definition.Type.IsValueType)
             {
                 //CodeTypeReference t2 = new CodeTypeReference(typeof(System.Nullable));
                 //t2.TypeArguments.Add(type);
                 //field = new CodeMemberField(t2, fieldName);
-                field = new CodeMemberField(type, definition.FieldName);
+                if (definition.ForeignKey)
+                    field = new CodeMemberField(definition.ForeignKeyType, definition.FieldName);
+                else
+                    field = new CodeMemberField(definition.Type, definition.FieldName);
             }
             else
             {
-                field = new CodeMemberField(type, definition.FieldName);
+                if (definition.ForeignKey)
+                    field = new CodeMemberField(definition.ForeignKeyType, definition.FieldName);
+                else
+                    field = new CodeMemberField(definition.Type, definition.FieldName);
             }
 
             field.Attributes = MemberAttributes.Private;
@@ -187,31 +192,35 @@ namespace CsDO.CodeGenerator
                 //property = new CodeMemberProperty();
                 //property.Type = t2;
                 property = new CodeMemberProperty();
-                property.Type = new CodeTypeReference(type);
+                if (definition.ForeignKey)
+                    property.Type = new CodeTypeReference(definition.ForeignKeyType);
+                else
+                    property.Type = new CodeTypeReference(definition.Type);
             }
             else
             {
                 property = new CodeMemberProperty();
-                property.Type = new CodeTypeReference(type);
+                if (definition.ForeignKey)
+                    property.Type = new CodeTypeReference(definition.ForeignKeyType);
+                else
+                    property.Type = new CodeTypeReference(definition.Type);
             }
 
             property.Name = definition.PropertyName;
-            property.Attributes = MemberAttributes.Public;
+            property.Attributes = MemberAttributes.Public | MemberAttributes.Final;
 
-            string columnName = definition.FieldName.Substring(1, definition.FieldName.Length - 1);
-
-            if (property.Name != columnName)
+            if (property.Name != definition.ColumnName)
             {
                 property.CustomAttributes.Add(new CodeAttributeDeclaration("Column",
                     new CodeAttributeArgument[] {
-                        new CodeAttributeArgument(new CodePrimitiveExpression(columnName))
+                        new CodeAttributeArgument(new CodePrimitiveExpression(definition.ColumnName))
                     }));
             }
 
             #region property comments
             property.Comments.AddRange(InsertDocumentation(Documetation.Summary, new string[]
                 {
-                    "Property that that maps column '" + columnName + "'."
+                    "Property that that maps column '" + definition.ColumnName + "'."
                 }));
             #endregion 
 

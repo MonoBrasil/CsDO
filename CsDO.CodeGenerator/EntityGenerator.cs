@@ -18,11 +18,10 @@ namespace CsDO.CodeGenerator
             this.driver = driver;
         }
 
-        public string Run(string name, string alias, string path)
+        public string Run(ClassDefinition table, string path)
         {
             using (CodeDomProvider provider = new CSharpCodeProvider())
             {
-                bool useAlias = !String.IsNullOrEmpty(alias);
                 CodeCompileUnit unit = new CodeCompileUnit();
 
                 CodeNamespace codeNamespace = new CodeNamespace(namespaceName);
@@ -38,7 +37,7 @@ namespace CsDO.CodeGenerator
                     "",
                     "If you need to extend this class, create another file and use this code:",
                     @"
-    public partial class " + (useAlias ? alias.Trim() : name.Trim()) + @"
+    public partial class " + table + @"
     {
     }
 "
@@ -47,13 +46,13 @@ namespace CsDO.CodeGenerator
 
                 unit.Namespaces.Add(codeNamespace);
 
-                CodeTypeDeclaration type = CreateClass(name, alias);
+                CodeTypeDeclaration type = CreateClass(table);
                 codeNamespace.Types.Add(type);
 
-                List<FieldDefinition> list = SchemaReader.ReadSchema(driver, name);
+                SchemaReader.ReadSchema(driver, table);
 
-                WriteFields(list, type);
-                WriteProperties(list, type);
+                WriteFields(table.Columns, type);
+                WriteProperties(table.Columns, type);
                 //WriteConstructor(list, type);
 
                 CodeGeneratorOptions options = new CodeGeneratorOptions();
@@ -64,7 +63,7 @@ namespace CsDO.CodeGenerator
                 TextWriter writer = new StringWriter();
 
                 string filename = Path.GetFullPath(path) +
-                    Path.DirectorySeparatorChar + namespaceName + "." + name + ".cs";
+                    Path.DirectorySeparatorChar + namespaceName + "." + table + ".cs";
                 
                 if (File.Exists(filename))
                     File.Delete(filename);

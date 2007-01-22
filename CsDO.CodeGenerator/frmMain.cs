@@ -125,8 +125,18 @@ namespace CsDO.CodeGenerator
         {
             EntityGenerator eg = new EntityGenerator(txtNamespace.Text, driver);
 
-            foreach (string name in lbxDatabase.CheckedItems)
-                 eg.Run(name, null, txtDestinationPath.Text);
+            Progress.Minimum = 0;
+            Progress.Maximum = lbxDatabase.CheckedItems.Count;
+            Progress.Step = 1;
+            Progress.AutoSize = false;
+            Progress.Width = this.Width;
+            Progress.Visible = true;
+            foreach (ClassDefinition table in lbxDatabase.CheckedItems)
+            {
+                eg.Run(table, txtDestinationPath.Text);
+                Progress.PerformStep();
+            }
+            Progress.Visible = false;
         }
 
         private void cbxDriver_SelectedIndexChanged(object sender, EventArgs e)
@@ -142,5 +152,87 @@ namespace CsDO.CodeGenerator
             }
         }
 
+        private void miSelectAll_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < lbxDatabase.Items.Count; i++)
+                lbxDatabase.SetItemChecked(i, true);
+        }
+
+        private void miDeselectAll_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < lbxDatabase.Items.Count; i++)
+                lbxDatabase.SetItemChecked(i, false);
+        }
+
+        private void miSelectTable_Click(object sender, EventArgs e)
+        {
+            lbxDatabase.SetItemChecked(lbxDatabase.SelectedIndex, true);
+        }
+
+        private void miDeselectTable_Click(object sender, EventArgs e)
+        {
+            lbxDatabase.SetItemChecked(lbxDatabase.SelectedIndex, false);
+        }
+
+        private void cmsDatabase_Opening(object sender, CancelEventArgs e)
+        {
+            miSelectAll.Enabled = lbxDatabase.Items.Count > 0;
+            miDeselectAll.Enabled = lbxDatabase.Items.Count > 0;
+            miSelectTable.Enabled = lbxDatabase.Items.Count > 0 && lbxDatabase.SelectedIndex >= 0 && !lbxDatabase.GetItemChecked(lbxDatabase.SelectedIndex);
+            miSelectTable.Visible = miSelectTable.Enabled;
+            miDeselectTable.Enabled = lbxDatabase.Items.Count > 0 && lbxDatabase.SelectedIndex >= 0 && lbxDatabase.GetItemChecked(lbxDatabase.SelectedIndex);
+            miDeselectTable.Visible = miDeselectTable.Enabled;
+            miRenameTable.Enabled = lbxDatabase.Items.Count > 0 && lbxDatabase.SelectedIndex >= 0;
+        }
+
+        private void lbxDatabase_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                int i = lbxDatabase.IndexFromPoint(e.X, e.Y);
+                lbxDatabase.ClearSelected();
+                lbxDatabase.SetSelected(i, true);
+            }
+        }
+
+        private TextBox edit = null;
+        private int index = -1;
+
+        void edit_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)13)
+                lbxDatabase.Focus();
+        }
+
+        void edit_Leave(object sender, EventArgs e)
+        {
+            ClassDefinition table = ((ClassDefinition)lbxDatabase.Items[index]);
+            table.Alias = !table.Table.Equals(edit.Text.Trim()) ? edit.Text.Trim() : null;
+            lbxDatabase.Controls.Remove(edit);
+            edit.Dispose();
+        }
+
+        private void lbxDatabase_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            
+        }
+
+        private void miRenameTable_Click(object sender, EventArgs e)
+        {
+            int i = lbxDatabase.SelectedIndex;
+            if (i > -1 && lbxDatabase.GetSelected(i))
+            {
+                Rectangle rect = lbxDatabase.GetItemRectangle(i);
+                edit = new TextBox();
+                edit.BorderStyle = BorderStyle.FixedSingle;
+                edit.SetBounds(rect.Left + 15, rect.Top,
+                    rect.Width - 15, rect.Height - 4);
+                edit.Text = lbxDatabase.Items[i].ToString();
+                edit.Leave += new EventHandler(edit_Leave);
+                edit.KeyPress += new KeyPressEventHandler(edit_KeyPress);
+                index = i;
+                lbxDatabase.Controls.Add(edit);
+            }
+        }
     }
 }

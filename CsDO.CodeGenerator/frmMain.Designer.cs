@@ -28,11 +28,18 @@ namespace CsDO.CodeGenerator
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.Status = new System.Windows.Forms.StatusStrip();
-            this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
-            this.ProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.Progress = new System.Windows.Forms.ToolStripProgressBar();
             this.dlgFolder = new System.Windows.Forms.FolderBrowserDialog();
             this.lbxDatabase = new System.Windows.Forms.CheckedListBox();
+            this.cmsDatabase = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.miSelectAll = new System.Windows.Forms.ToolStripMenuItem();
+            this.miDeselectAll = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.miRenameTable = new System.Windows.Forms.ToolStripMenuItem();
+            this.miSelectTable = new System.Windows.Forms.ToolStripMenuItem();
+            this.miDeselectTable = new System.Windows.Forms.ToolStripMenuItem();
             this.cbxLanguage = new System.Windows.Forms.ComboBox();
             this.cbxDriver = new System.Windows.Forms.ComboBox();
             this.lbDBServer = new System.Windows.Forms.Label();
@@ -55,29 +62,25 @@ namespace CsDO.CodeGenerator
             this.txtDBPort = new System.Windows.Forms.TextBox();
             this.lblDBPort = new System.Windows.Forms.Label();
             this.Status.SuspendLayout();
+            this.cmsDatabase.SuspendLayout();
             this.SuspendLayout();
             // 
             // Status
             // 
             this.Status.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.lblStatus,
-            this.ProgressBar});
+            this.Progress});
             this.Status.Location = new System.Drawing.Point(0, 326);
             this.Status.Name = "Status";
             this.Status.Size = new System.Drawing.Size(437, 22);
             this.Status.TabIndex = 0;
             this.Status.Text = "statusStrip1";
             // 
-            // lblStatus
+            // Progress
             // 
-            this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(109, 17);
-            this.lblStatus.Text = "toolStripStatusLabel1";
-            // 
-            // ProgressBar
-            // 
-            this.ProgressBar.Name = "ProgressBar";
-            this.ProgressBar.Size = new System.Drawing.Size(100, 16);
+            this.Progress.Name = "Progress";
+            this.Progress.Size = new System.Drawing.Size(100, 16);
+            this.Progress.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.Progress.Visible = false;
             // 
             // dlgFolder
             // 
@@ -86,11 +89,68 @@ namespace CsDO.CodeGenerator
             // lbxDatabase
             // 
             this.lbxDatabase.CheckOnClick = true;
+            this.lbxDatabase.ContextMenuStrip = this.cmsDatabase;
             this.lbxDatabase.FormattingEnabled = true;
             this.lbxDatabase.Location = new System.Drawing.Point(206, 40);
             this.lbxDatabase.Name = "lbxDatabase";
             this.lbxDatabase.Size = new System.Drawing.Size(219, 274);
+            this.lbxDatabase.Sorted = true;
             this.lbxDatabase.TabIndex = 12;
+            this.lbxDatabase.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lbxDatabase_MouseDoubleClick);
+            this.lbxDatabase.MouseDown += new System.Windows.Forms.MouseEventHandler(this.lbxDatabase_MouseDown);
+            // 
+            // cmsDatabase
+            // 
+            this.cmsDatabase.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.miSelectAll,
+            this.miDeselectAll,
+            this.toolStripSeparator1,
+            this.miRenameTable,
+            this.miSelectTable,
+            this.miDeselectTable});
+            this.cmsDatabase.Name = "cmsDatabase";
+            this.cmsDatabase.Size = new System.Drawing.Size(172, 120);
+            this.cmsDatabase.Opening += new System.ComponentModel.CancelEventHandler(this.cmsDatabase_Opening);
+            // 
+            // miSelectAll
+            // 
+            this.miSelectAll.Name = "miSelectAll";
+            this.miSelectAll.Size = new System.Drawing.Size(171, 22);
+            this.miSelectAll.Text = "Select &all tables";
+            this.miSelectAll.Click += new System.EventHandler(this.miSelectAll_Click);
+            // 
+            // miDeselectAll
+            // 
+            this.miDeselectAll.Name = "miDeselectAll";
+            this.miDeselectAll.Size = new System.Drawing.Size(171, 22);
+            this.miDeselectAll.Text = "&Deselect all tables";
+            this.miDeselectAll.Click += new System.EventHandler(this.miDeselectAll_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(168, 6);
+            // 
+            // miRenameTable
+            // 
+            this.miRenameTable.Name = "miRenameTable";
+            this.miRenameTable.Size = new System.Drawing.Size(171, 22);
+            this.miRenameTable.Text = "&Rename table";
+            this.miRenameTable.Click += new System.EventHandler(this.miRenameTable_Click);
+            // 
+            // miSelectTable
+            // 
+            this.miSelectTable.Name = "miSelectTable";
+            this.miSelectTable.Size = new System.Drawing.Size(171, 22);
+            this.miSelectTable.Text = "&Select table";
+            this.miSelectTable.Click += new System.EventHandler(this.miSelectTable_Click);
+            // 
+            // miDeselectTable
+            // 
+            this.miDeselectTable.Name = "miDeselectTable";
+            this.miDeselectTable.Size = new System.Drawing.Size(171, 22);
+            this.miDeselectTable.Text = "D&eselect table";
+            this.miDeselectTable.Click += new System.EventHandler(this.miDeselectTable_Click);
             // 
             // cbxLanguage
             // 
@@ -322,6 +382,7 @@ namespace CsDO.CodeGenerator
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.Status.ResumeLayout(false);
             this.Status.PerformLayout();
+            this.cmsDatabase.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -331,8 +392,7 @@ namespace CsDO.CodeGenerator
 
         private System.Windows.Forms.StatusStrip Status;
         private System.Windows.Forms.FolderBrowserDialog dlgFolder;
-        private System.Windows.Forms.ToolStripStatusLabel lblStatus;
-        private System.Windows.Forms.ToolStripProgressBar ProgressBar;
+        private System.Windows.Forms.ToolStripProgressBar Progress;
         private System.Windows.Forms.CheckedListBox lbxDatabase;
         private System.Windows.Forms.ComboBox cbxLanguage;
         private System.Windows.Forms.ComboBox cbxDriver;
@@ -355,6 +415,13 @@ namespace CsDO.CodeGenerator
         private System.Windows.Forms.Label lblDBName;
         private System.Windows.Forms.TextBox txtDBPort;
         private System.Windows.Forms.Label lblDBPort;
+        private System.Windows.Forms.ContextMenuStrip cmsDatabase;
+        private System.Windows.Forms.ToolStripMenuItem miSelectAll;
+        private System.Windows.Forms.ToolStripMenuItem miDeselectAll;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem miRenameTable;
+        private System.Windows.Forms.ToolStripMenuItem miSelectTable;
+        private System.Windows.Forms.ToolStripMenuItem miDeselectTable;
     }
 }
 
