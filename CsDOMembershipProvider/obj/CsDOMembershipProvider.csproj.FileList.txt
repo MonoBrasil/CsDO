@@ -1,7 +1,0 @@
-obj\Debug\ResolveAssemblyReference.cache
-bin\Debug\CsDOMembershipProvider.dll
-bin\Debug\CsDOMembershipProvider.pdb
-bin\Debug\CsDO.Lib.dll
-bin\Debug\CsDO.Lib.pdb
-obj\Debug\CsDOMembershipProvider.dll
-obj\Debug\CsDOMembershipProvider.pdb
