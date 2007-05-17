@@ -37,19 +37,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Lib", "src\Lib\CsDO.Li
 		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockDataProvider", "..\MockDataProvider\MockDataProvider.csproj", "{1C7C9722-123C-497D-8ACC-A09DA40D7E8E}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Lib.MockDriver", "src\Lib\CsDo.Lib.MockDriver\CsDO.Lib.MockDriver.csproj", "{C082C9D7-BB60-4829-9207-2B39FE57C9C5}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockDataProvider.UnitTests", "..\MockDataProvider\MockDataProvider.UnitTests\MockDataProvider.UnitTests.csproj", "{ED293771-0374-4C66-8989-8A1DF48B0FD4}"
 	ProjectSection(WebsiteProperties) = preProject
 		Debug.AspNetCompiler.Debug = "True"
 		Release.AspNetCompiler.Debug = "False"
@@ -57,7 +45,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockDataProvider.UnitTests"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 9
+		SccNumberOfProjects = 8
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs01.codeplex.com/
 		SccLocalPath0 = .
@@ -82,9 +70,6 @@ Global
 		SccProjectUniqueName7 = src\\Lib\\CsDo.Lib.MockDriver\\CsDO.Lib.MockDriver.csproj
 		SccProjectName7 = src/Lib/CsDo.Lib.MockDriver
 		SccLocalPath7 = src\\Lib\\CsDo.Lib.MockDriver
-		SccProjectUniqueName8 = ..\\MockDataProvider\\MockDataProvider.csproj
-		SccProjectName8 = ../MockDataProvider
-		SccLocalPath8 = ..\\MockDataProvider
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,18 +100,10 @@ Global
 		{29291966-F3A0-4F7A-816F-9376E5AF32BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29291966-F3A0-4F7A-816F-9376E5AF32BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29291966-F3A0-4F7A-816F-9376E5AF32BF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1C7C9722-123C-497D-8ACC-A09DA40D7E8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1C7C9722-123C-497D-8ACC-A09DA40D7E8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1C7C9722-123C-497D-8ACC-A09DA40D7E8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1C7C9722-123C-497D-8ACC-A09DA40D7E8E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ED293771-0374-4C66-8989-8A1DF48B0FD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ED293771-0374-4C66-8989-8A1DF48B0FD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ED293771-0374-4C66-8989-8A1DF48B0FD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ED293771-0374-4C66-8989-8A1DF48B0FD4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
