@@ -157,5 +157,23 @@ namespace CsDO.Lib.MockDriver
 			if (conn != null)
 				conn.Close();
 		}
+
+        #region IDataBase Members
+        public DbParameter getParameter()
+        {
+            return new MockParameter();
+        }
+
+        public DbParameter getParameter(string name, DbType type, int size)
+        {
+            DbParameter parameter = new MockParameter();
+
+            parameter.DbType = type;
+            parameter.ParameterName = name;
+            parameter.Size = size;
+
+            return parameter;
+        }
+        #endregion
     }		
 }

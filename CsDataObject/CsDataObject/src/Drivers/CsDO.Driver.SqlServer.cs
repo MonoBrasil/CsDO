@@ -151,6 +151,101 @@ namespace CsDO.Drivers.SqlServer
 			if (conn != null)
 				conn.Close();
 		}
+
+        #region IDataBase Members
+        public DbParameter getParameter()
+        {
+            return new SqlParameter();
+        }
+
+        public DbParameter getParameter(string name, DbType type, int size)
+        {
+            SqlDbType dbType = SqlDbType.Variant;
+
+            switch (type)
+            {
+                case DbType.AnsiString:
+                    dbType = SqlDbType.VarChar;
+                    break;
+                case DbType.AnsiStringFixedLength:
+                    dbType = SqlDbType.Char;
+                    break;
+                case DbType.Binary:
+                    dbType = SqlDbType.Binary;
+                    break;
+                case DbType.Boolean:
+                    dbType = SqlDbType.Bit;
+                    break;
+                case DbType.Byte:
+                    dbType = SqlDbType.TinyInt;
+                    break;
+                case DbType.Currency:
+                    dbType = SqlDbType.Money;
+                    break;
+                case DbType.Date:
+                    dbType = SqlDbType.DateTime;
+                    break;
+                case DbType.DateTime:
+                    dbType = SqlDbType.DateTime;
+                    break;
+                case DbType.Decimal:
+                    dbType = SqlDbType.Decimal;
+                    break;
+                case DbType.Double:
+                    dbType = SqlDbType.Float;
+                    break;
+                case DbType.Guid:
+                    dbType = SqlDbType.UniqueIdentifier;
+                    break;
+                case DbType.Int16:
+                    dbType = SqlDbType.SmallInt;
+                    break;
+                case DbType.Int32:
+                    dbType = SqlDbType.Int;
+                    break;
+                case DbType.Int64:
+                    dbType = SqlDbType.BigInt;
+                    break;
+                case DbType.Object:
+                    dbType = SqlDbType.VarBinary;
+                    break;
+                case DbType.SByte:
+                    dbType = SqlDbType.SmallInt;
+                    break;
+                case DbType.Single:
+                    dbType = SqlDbType.Real;
+                    break;
+                case DbType.String:
+                    dbType = SqlDbType.VarChar;
+                    break;
+                case DbType.StringFixedLength:
+                    break;
+                case DbType.Time:
+                    dbType = SqlDbType.DateTime;
+                    break;
+                case DbType.UInt16:
+                    dbType = SqlDbType.Decimal;
+                    break;
+                case DbType.UInt32:
+                    dbType = SqlDbType.Decimal;
+                    break;
+                case DbType.UInt64:
+                    dbType = SqlDbType.Decimal;
+                    break;
+                case DbType.VarNumeric:
+                    dbType = SqlDbType.Decimal;
+                    break;
+                case DbType.Xml:
+                    dbType = SqlDbType.Xml;
+                    break;
+                default:
+                    break;
+            }
+
+            return new SqlParameter(name, dbType, size);
+        }
+        #endregion
+
 	}
 }
 

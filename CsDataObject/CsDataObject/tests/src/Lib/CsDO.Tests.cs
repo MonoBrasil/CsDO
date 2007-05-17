@@ -372,7 +372,7 @@ namespace CsDO.Tests {
 			Assert.IsTrue(obj.find(), "DataObject find");
             Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObject WHERE (Cod = 1) ", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject cannot select from table");
 			Assert.IsTrue(obj.retrieve("Nome", "teste"), "DataObject retrieve");
-            Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObject WHERE Nome LIKE 'teste'", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
+            Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObject WHERE (Nome LIKE 'teste') ", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
 		}
 		
 		[Test]
@@ -526,7 +526,7 @@ namespace CsDO.Tests {
             obj.insert();
 
 			Assert.IsTrue(obj.retrieve("Nome", "teste1"), "DataObject retrieve");
-            Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE Nome LIKE 'teste1'", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
+            Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (Nome LIKE 'teste1') ", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
 			Assert.IsTrue(obj.fetch(), "DataObject fetch");
 			Assert.AreEqual(1, obj.ID, "DataObject retrieve #1");
 			Assert.AreEqual(18, obj.Idade, "DataObject retrieve");
@@ -538,7 +538,7 @@ namespace CsDO.Tests {
 			obj = new TesteObj();
 
 			Assert.IsTrue(obj.retrieve("Cod", 1), "DataObject retrieve");
-			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE Cod = 1", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
+			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (Cod = 1) ", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
 			Assert.IsTrue(obj.fetch(), "DataObject fetch");
 			Assert.AreEqual(1, obj.ID, "DataObject retrieve #2");
 			Assert.AreEqual(18, obj.Idade, "DataObject retrieve");
@@ -550,7 +550,7 @@ namespace CsDO.Tests {
 			obj = new TesteObj();
 
 			Assert.IsTrue(obj.retrieve("ID", 1), "DataObject retrieve");
-			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE Cod = 1", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
+			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (Cod = 1) ", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
 			Assert.IsTrue(obj.fetch(), "DataObject fetch");
 			Assert.AreEqual(1, obj.ID, "DataObject retrieve #3");
 			Assert.AreEqual(18, obj.Idade, "DataObject retrieve");
@@ -562,7 +562,7 @@ namespace CsDO.Tests {
 			obj = new TesteObj();
 
 			Assert.IsTrue(obj.retrieve("Peso", 60.5), "DataObject retrieve");
-			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE PesoKg = 60.5", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");			
+			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (PesoKg = 60.5) ", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");			
 			Assert.IsTrue(obj.fetch(), "DataObject fetch");
 			Assert.AreEqual(1, obj.ID, "DataObject retrieve #4");
 			Assert.AreEqual(18, obj.Idade, "DataObject retrieve");
@@ -575,7 +575,7 @@ namespace CsDO.Tests {
 
 			Assert.IsTrue(obj.retrieve("PesoKg", 60.5), "DataObject retrieve");
 			Assert.IsTrue(obj.fetch(), "DataObject fetch");
-			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE PesoKg = 60.5", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");			
+			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (PesoKg = 60.5) ", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");			
 			Assert.AreEqual(1, obj.ID, "DataObject retrieve #5");
 			Assert.AreEqual(18, obj.Idade, "DataObject retrieve");
 			Assert.AreEqual(60.5, obj.Peso, "DataObject retrieve");
@@ -586,7 +586,7 @@ namespace CsDO.Tests {
 			obj = new TesteObj();
 
 			Assert.IsTrue(obj.retrieve("Idade", 18), "DataObject retrieve");
-			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE Idade = 18", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");						
+			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (Idade = 18) ", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");						
 			Assert.IsTrue(obj.fetch(), "DataObject fetch");
 			Assert.AreEqual(1, obj.ID, "DataObject retrieve #6");
 			Assert.AreEqual(18, obj.Idade, "DataObject retrieve");
@@ -710,33 +710,33 @@ namespace CsDO.Tests {
 			
 			obj.SetWhere("Idade > 18");		
 			Assert.IsTrue(obj.retrieve("Nome", "teste"), "DataObject retrieve");
-			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE Nome LIKE 'teste' AND Idade > 18", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
+			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (Nome LIKE 'teste')  AND Idade > 18", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
 
 			obj.SetOrderBy("Nome,Idade");		
 			Assert.IsTrue(obj.retrieve("PesoKg", 50), "DataObject retrieve");
-			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE PesoKg = 50 AND Idade > 18 ORDER BY Nome,Idade", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
+			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (PesoKg = 50)  AND Idade > 18 ORDER BY Nome,Idade", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
 
             obj.SetGroupBy("Idade,Nome,PesoKg,Teste1,Cod,Aniversario,Ativo");		
 			Assert.IsTrue(obj.retrieve("PesoKg", 50), "DataObject retrieve");
-            Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE PesoKg = 50 AND Idade > 18 GROUP BY Idade,Nome,PesoKg,Teste1,Cod,Aniversario,Ativo ORDER BY Nome,Idade", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
+            Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (PesoKg = 50)  AND Idade > 18 GROUP BY Idade,Nome,PesoKg,Teste1,Cod,Aniversario,Ativo ORDER BY Nome,Idade", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
 
 			obj.SetLimit("10");		
 			Assert.IsTrue(obj.retrieve("PesoKg", 50), "DataObject retrieve");
-            Assert.AreEqual("SELECT TOP 10 Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE PesoKg = 50 AND Idade > 18 GROUP BY Idade,Nome,PesoKg,Teste1,Cod,Aniversario,Ativo ORDER BY Nome,Idade", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
+            Assert.AreEqual("SELECT TOP 10 Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (PesoKg = 50)  AND Idade > 18 GROUP BY Idade,Nome,PesoKg,Teste1,Cod,Aniversario,Ativo ORDER BY Nome,Idade", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
 			
 			obj.SetWhere(null);		
 			Assert.IsTrue(obj.retrieve("PesoKg", 50), "DataObject retrieve");
-            Assert.AreEqual("SELECT TOP 10 Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE PesoKg = 50 GROUP BY Idade,Nome,PesoKg,Teste1,Cod,Aniversario,Ativo ORDER BY Nome,Idade", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
+            Assert.AreEqual("SELECT TOP 10 Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (PesoKg = 50)  GROUP BY Idade,Nome,PesoKg,Teste1,Cod,Aniversario,Ativo ORDER BY Nome,Idade", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
 
 			obj.SetLimit(null);		
 			obj.SetGroupBy("");				
 	
 			Assert.IsTrue(obj.retrieve("PesoKg", 50), "DataObject retrieve");
-			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE PesoKg = 50 ORDER BY Nome,Idade", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
+			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (PesoKg = 50)  ORDER BY Nome,Idade", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");
 
 			obj.SetOrderBy("");
 			Assert.IsTrue(obj.retrieve("PesoKg", 50), "DataObject retrieve");
-			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE PesoKg = 50", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");			
+			Assert.AreEqual("SELECT Cod,Nome,Idade,PesoKg,Aniversario,Teste1,Ativo FROM TesteObj WHERE (PesoKg = 50) ", ((MockDriver)Conf.Driver).getPreviousCommand().CommandText, "DataObject retrieve");			
 		}
 
         [Test]

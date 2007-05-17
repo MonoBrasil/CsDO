@@ -296,6 +296,56 @@ namespace CsDO.Drivers
             return dataAdapter;
         }
 
+        protected DbParameter objectParameter()
+        {
+            Assembly assembly;
+            string prefix;
+            if (ConfigurationManager.AppSettings["dbNameSpace"] != null)
+            {
+                prefix = ConfigurationManager.AppSettings["dbNameSpace"].ToString();
+            }
+            else
+            {
+                prefix = null;
+            }
+
+            assembly = Assembly.Load(ConfigurationManager.AppSettings["dbAssembly"].ToString());
+
+            Type[] tipos = assembly.GetTypes();
+            DbParameter paramter = null;
+            foreach (Type tipo in tipos)
+            {
+                Type getInterface = tipo.GetInterface("IDbParameter");
+                if (getInterface != null)
+                {
+                    Assembly assCon = Assembly.Load(tipo.Assembly.GetName());
+                    if (prefix != null && prefix != string.Empty)
+                    {
+                        string[] namespaces = tipo.Namespace.Split('.');
+
+                        if (namespaces[namespaces.Length - 1] == prefix)
+                        {
+                            StringBuilder obj = new StringBuilder(tipo.Namespace);
+                            obj.Append(".");
+                            obj.Append(tipo.Name);
+                            return paramter = (DbParameter)assCon.
+                                CreateInstance(obj.ToString(), false, BindingFlags.InvokeMethod,
+                                    null, new object[] {}, null, null);
+                        }
+                    }
+                    else
+                    {
+                        StringBuilder obj = new StringBuilder(tipo.Namespace);
+                        obj.Append(".");
+                        obj.Append(tipo.Name);
+                        return paramter = (DbParameter)assCon.
+                            CreateInstance(obj.ToString(), false, BindingFlags.InvokeMethod,
+                                null, new object[] { }, null, null);
+                    }
+                }
+            }
+            return paramter;
+        }
 
         #region IDisposable Members
 
@@ -355,6 +405,22 @@ namespace CsDO.Drivers
         {
             if (conn != null)
                 conn.Close();
+        }
+
+        public DbParameter getParameter()
+        {
+            return objectParameter();
+        }
+
+        public DbParameter getParameter(string name, DbType type, int size)
+        {
+            DbParameter parameter = objectParameter();
+
+            parameter.ParameterName = name;
+            parameter.DbType = type;
+            parameter.Size = size;
+
+            return parameter;
         }
 
         #endregion

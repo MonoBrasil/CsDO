@@ -96,6 +96,8 @@ namespace CsDO.Lib
         DataTable getSchema();
         DataTable getSchema(string collectionName);
         DataTable getSchema(string collectionName, string[] restrictions);
+        DbParameter getParameter();
+        DbParameter getParameter(string name, DbType type, int size);
     } 
 
     #endregion
@@ -141,17 +143,33 @@ namespace CsDO.Lib
 		    return rowsaffected;
 		}
 
-        public int Exec(string query, IDataParameter[] Params)
+        public int Exec(DbTransaction trans, String query)
         {
             if (query.ToLower().Contains("update"))
                 Conf.DataPool.Clear();
 
             DisposeDataReaders();
-            IDbCommand command = Conf.Driver.getCommand(query);
+            DbCommand command = Conf.Driver.getCommand(query);
+            Int32 rowsaffected;
+
+            command.Transaction = trans;
+
+            rowsaffected = command.ExecuteNonQuery();
+
+            return rowsaffected;
+        }
+
+        public int Exec(string query, DbParameter[] Params)
+        {
+            if (query.ToLower().Contains("update"))
+                Conf.DataPool.Clear();
+
+            DisposeDataReaders();
+            DbCommand command = Conf.Driver.getCommand(query);
 
             if (Params != null)
             {
-                foreach (IDataParameter param in Params)
+                foreach (DbParameter param in Params)
                 {
                     if (param.Value == null)
                         param.Value = DBNull.Value;
@@ -162,6 +180,35 @@ namespace CsDO.Lib
                         command.Parameters.Add(param);
                 }
             }
+
+            int result = command.ExecuteNonQuery();
+
+            return result;
+        }
+
+        public int Exec(DbTransaction trans, string query, DbParameter[] Params)
+        {
+            if (query.ToLower().Contains("update"))
+                Conf.DataPool.Clear();
+
+            DisposeDataReaders();
+            DbCommand command = Conf.Driver.getCommand(query);
+
+            if (Params != null)
+            {
+                foreach (DbParameter param in Params)
+                {
+                    if (param.Value == null)
+                        param.Value = DBNull.Value;
+
+                    if (command.Parameters.Contains(param))
+                        command.Parameters[param.ParameterName] = param;
+                    else
+                        command.Parameters.Add(param);
+                }
+            }
+
+            command.Transaction = trans;
 
             int result = command.ExecuteNonQuery();
 
@@ -218,7 +265,7 @@ namespace CsDO.Lib
         public DataSet QueryDS(CommandType cmdType, string query, DbParameter[] Params) 
 		{
             DbCommand command = Conf.Driver.getCommand(query);
-            IDataAdapter da = Conf.Driver.getDataAdapter(command);
+            DbDataAdapter da = Conf.Driver.getDataAdapter(command);
             DataSet ds = new DataSet();
             command.CommandTimeout = 90;
             command.CommandType = cmdType;
@@ -249,6 +296,16 @@ namespace CsDO.Lib
             }
 
             return ds;
+        }
+
+        public DataTable QueryDT(CommandType cmdType, string query, DbParameter[] Params)
+        {
+            DataSet ds = QueryDS(cmdType, query, Params);
+
+            if (ds.Tables.Count > 0)
+                return ds.Tables[0];
+            else
+                return null;
         }
     }
 }
