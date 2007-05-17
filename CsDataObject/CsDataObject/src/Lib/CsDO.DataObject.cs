@@ -747,7 +747,7 @@ namespace CsDO.Lib
                 return result;
             }
             else
-                throw new CsDOException("No search has been performed before !");
+                return new ArrayList();
         }
 
         public IList ToArray(bool listAll)
@@ -1897,7 +1897,7 @@ namespace CsDO.Lib
         {
             bool result = false;
 
-            if (ResultSet != null && ResultSet.Rows.Count > 0)
+            if (ResultSet != null && ResultSet.Rows.Countg > 0)
             {
                 DataRow row = ResultSet.Rows[rowsCounter++];
 
