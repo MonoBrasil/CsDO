@@ -41,13 +41,11 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
+using System.Collections;
 using System.Data;
 using System.Globalization;
-using System.Collections;
-using System.Data.Common;
+using System.Reflection;
+using System.Text;
 
 namespace CsDO.Lib
 {
@@ -60,7 +58,6 @@ namespace CsDO.Lib
     //public delegate int Identity(DataObject table);
     #endregion
 
-    #region Disposable State
     /// <summary>
     /// Represents current state of disposable object.
     /// </summary>
@@ -79,58 +76,87 @@ namespace CsDO.Lib
         /// </summary>
         Disposed,
     }
-    #endregion
 
-    [Serializable()]
-    public class DataObject : IDisposable, ICloneable
+    public class ObjectDataTable
     {
-        #region Properties
-        private bool debug = false;
+        private DataTable dt;
 
-        /// <summary>
-        /// Armazena o resultado de uma busca efetuada pelos métodos find() ou Get()
-        /// </summary>
-        [NonSerialized()]
-        private DataTable _resultSet;
+        private int row = 0;
 
-        /// <summary>
-        /// Indica qual linha do resultado de uma pesquisa deve ser utilizada,
-        /// pelo método fetch(), para popular a instância
-        /// </summary>
-        private int rowsCounter = 0;
-
-        /// <summary>
-        /// Hashtable que contém as transações ativas com o SGBD.
-        /// Utilizada pelos métodos BeginTransaction, CommitTransaction e RollBackTransaction.
-        /// </summary>
-        private static Hashtable transactions = new Hashtable();
-
-        private bool _persisted = false;
-        private string _fields = null;
-        private string _where = null;
-        private string _limit = null;
-        private string _orderBy = null;
-        private string _groupBy = null;
-        private IList _primaryKeys = null;
-        private IList _foreignKeys = null;
-        private int depth = 3;
-
-        /// <summary>
-        /// Retorna/Armazena o resultado de uma busca efetuada pelos métodos find() ou Get()
-        /// </summary>
-        protected DataTable ResultSet
+        public int Cursor
         {
-            get
+            get 
             {
-                return _resultSet;
-            }
-            set
-            {
-                this._resultSet = value;
-                //Serve para indicar ao fetch qual linha usar, deve ser zerado a cada nova pesquisa.
-                this.rowsCounter = 0;
+                if (Read())
+                    return row++;
+                else
+                    return row; 
             }
         }
+
+        public bool IsEmpty
+        {
+            get { return dt.Rows.Count == 0; }
+        }
+
+        public DataRowCollection Rows 
+        {
+            get { return dt.Rows; }
+        }
+
+        public DataColumnCollection Columns 
+        {
+            get { return dt.Columns; }
+        }
+
+        public DataRow this[int index]
+        {
+            get { return dt.Rows[index]; }
+        }
+
+        public ObjectDataTable(DataTable table)
+        {
+            dt = table;
+        }
+
+        public bool Read()
+        {
+            bool result = row < dt.Rows.Count;
+
+            return result;
+        }
+
+        public void ResetCursor()
+        {
+            row = 0;
+        }
+
+        public void Clear()
+        {
+            dt.Clear();
+            ResetCursor();
+        }
+    }
+
+    [Serializable()]
+	public class DataObject: IDisposable, ICloneable
+	{
+		#region Properties
+		private bool debug = false;
+
+        [NonSerialized()]
+        private ObjectDataTable dt = null;
+
+		private bool _persisted = false;
+		private string _table = null;
+		private string _fields = null;
+		private string _where = null;
+		private string _limit = null;
+		private string _orderBy = null;
+		private string _groupBy = null;
+		private IList _primaryKeys = null;
+		private IList _foreignKeys = null;
+        private int depth = 3;
 
         [Column(false)]
         public int Depth
@@ -139,97 +165,70 @@ namespace CsDO.Lib
             set { depth = value; }
         }
 
-        /// <summary>
-        /// Retorna o nome da tabela, no SGBD, relacionada à classe
-        /// </summary>
-        [Column(false)]
-        private string Table
-        {
-            get
-            {
-                object[] attributes = GetType().GetCustomAttributes(typeof(Table), true);
-
-                if (attributes.Length > 0)
-                {
-                    Table table = (Table)attributes[0];
-
-                    if (!String.IsNullOrEmpty(table.Name))
-                        return table.Name;
-                }
-                return this.GetType().Name;
-            }
-        }
-
-        //[Column(false)]
-        //protected string Table
-        //{
-        //    get
-        //    {
-        //        if (_table == null)
-        //        {
-        //            _table = getTableProperties();
-
-        //            if (_table == null)
-        //            {
-        //                string[] fullName = GetType().FullName.Split('.');
-        //                return fullName[fullName.Length - 1].ToString();
-        //            }
-        //        }
-
-        //        return _table;
-        //    }
-        //}
-
-        protected string Fields
-        {
-            get
-            {
-                if (_fields == null)
-                {
-                    StringBuilder fields = new StringBuilder();
-                    PropertyInfo[] props = GetType().GetProperties();
-
-                    foreach (PropertyInfo propriedade in props)
-                    {
-                        string name = null;
-                        bool persist = true;
-
-                        getColumnProperties(propriedade, ref name, ref persist);
-
+		[Column(false)]
+		protected string Table
+		{
+			get
+			{
+				if (_table == null) {
+					_table = getTableProperties();
+					
+					if (_table == null) {
+						string[] fullName = GetType().FullName.Split('.');
+						return fullName[fullName.Length-1].ToString();
+					}
+				}
+				
+				return _table;
+			}
+		}
+		
+		protected string Fields {
+			get {
+				if (_fields == null) {
+					StringBuilder fields = new StringBuilder();
+					PropertyInfo [] props = GetType().GetProperties();
+					
+					foreach (PropertyInfo propriedade in props)
+					{
+						string name = null;
+						bool persist = true;
+						
+						getColumnProperties(propriedade, ref name, ref persist);
+						
                         if (!persist)
                             continue;
-
-                        if (name == null)
-                            name = propriedade.Name;
+						
+						if (name == null)
+							name = propriedade.Name;
 
                         fields.Append(name);
                         fields.Append(",");
-                    }
-                    fields.Remove(fields.Length - 1, 1);
+					}
+					fields.Remove(fields.Length -1, 1);
                     _fields = fields.ToString();
-                }
+				}
+				
+				return _fields;
+			}
+		}
 
-                return _fields;
-            }
-        }
-
-        protected string ActiveFields
-        {
-            get
+		protected string ActiveFields {
+			get 
             {
                 StringBuilder _active_fields = new StringBuilder();
-                PropertyInfo[] props = GetType().GetProperties();
+				PropertyInfo [] props = GetType().GetProperties();
+				
+				
+				foreach (PropertyInfo propriedade in props)
+				{
+					string name = null;
+					bool persist = true;
 
+					getColumnProperties(propriedade, ref name, ref persist);
 
-                foreach (PropertyInfo propriedade in props)
-                {
-                    string name = null;
-                    bool persist = true;
-
-                    getColumnProperties(propriedade, ref name, ref persist);
-
-                    if (!persist)
-                        continue;
+					if (!persist)
+						continue;
 
                     if (!propriedade.PropertyType.IsSubclassOf(typeof(DataObject)))
                     {
@@ -250,173 +249,186 @@ namespace CsDO.Lib
                     else
                     {
                         DataObject temp = (propriedade.GetValue(this, null) != null) ?
-                            (DataObject)propriedade.GetValue(this, null) : null;
+                            (DataObject) propriedade.GetValue(this, null) : null;
                         if (temp == null)
                             continue;
                         if ((int)temp.getPrimaryKey() == 0)
                             continue;
                     }
-
-                    if (name == null)
-                        name = propriedade.Name;
+					
+					if (name == null)
+						name = propriedade.Name;
 
                     _active_fields.Append(name);
                     _active_fields.Append(",");
-                }
+				}
                 if (_active_fields.Length > 0)
                     _active_fields.Remove(_active_fields.Length - 1, 1);
 
                 return _active_fields.ToString();
-            }
-        }
+			}
+		}
 
-        [Column(false)]
-        protected IList PrimaryKeys
-        {
-            get
-            {
-                if (_primaryKeys == null)
-                {
-                    PropertyInfo[] props = GetType().GetProperties();
-                    _primaryKeys = new ArrayList();
+		[Column(false)]
+		protected IList PrimaryKeys {
+			get {
+				if (_primaryKeys == null) {
+					PropertyInfo [] props =  GetType().GetProperties();
+					_primaryKeys = new ArrayList();
+					
+					foreach (PropertyInfo propriedade in props)
+					{
+						object[] attributes = propriedade.GetCustomAttributes(typeof(PrimaryKey), true);
+						
+						if (attributes.Length > 0)
+							_primaryKeys.Add(propriedade);
+						
+					}
+				}
+				
+				return _primaryKeys;
+			}
+		}
+		
+		[Column(false)]
+		protected IList ForeignKeys {
+			get {
+				if (_foreignKeys == null) {
+					PropertyInfo [] props =  GetType().GetProperties();
+					_foreignKeys = new ArrayList();
+					
+					foreach (PropertyInfo propriedade in props)
+					{
+						if (propriedade.PropertyType.IsSubclassOf(typeof(DataObject)))
+							_foreignKeys.Add(propriedade);
+					}
+				}
+				
+				return _foreignKeys;
+			}
+		}
+		
+		[Column(false)]
+		protected bool Debug
+		{
+			get { return debug; }
+			set { debug = value; }
+		}
+						
+		[Column(false)]
+		protected string Where
+		{
+			get { return _where; }
+			set { _where = value; }
+		}		
+		
+		[Column(false)]
+		protected string Limit
+		{
+			get { return _limit; }
+			set { _limit = value; }
+		}
+		
+		[Column(false)]
+		protected string OrderBy
+		{
+			get { return _orderBy; }
+			set { _orderBy = value; }
+		}
+		
+		[Column(false)]
+		protected string GroupBy
+		{
+			get { return _groupBy; }
+			set { _groupBy = value; }
+		}	
 
-                    foreach (PropertyInfo propriedade in props)
-                    {
-                        object[] attributes = propriedade.GetCustomAttributes(typeof(PrimaryKey), true);
-
-                        if (attributes.Length > 0)
-                            _primaryKeys.Add(propriedade);
-
-                    }
-                }
-
-                return _primaryKeys;
-            }
-        }
-
-        [Column(false)]
-        protected IList ForeignKeys
-        {
-            get
-            {
-                if (_foreignKeys == null)
-                {
-                    PropertyInfo[] props = GetType().GetProperties();
-                    _foreignKeys = new ArrayList();
-
-                    foreach (PropertyInfo propriedade in props)
-                    {
-                        if (propriedade.PropertyType.IsSubclassOf(typeof(DataObject)))
-                            _foreignKeys.Add(propriedade);
-                    }
-                }
-
-                return _foreignKeys;
-            }
-        }
-
-        [Column(false)]
-        protected bool Debug
-        {
-            get { return debug; }
-            set { debug = value; }
-        }
-
-        [Column(false)]
-        protected string Where
-        {
-            get { return _where; }
-            set { _where = value; }
-        }
-
-        [Column(false)]
-        protected string Limit
-        {
-            get { return _limit; }
-            set { _limit = value; }
-        }
-
-        [Column(false)]
-        protected string OrderBy
-        {
-            get { return _orderBy; }
-            set { _orderBy = value; }
-        }
-
-        [Column(false)]
-        protected string GroupBy
-        {
-            get { return _groupBy; }
-            set { _groupBy = value; }
-        }
-
-        [Column(false)]
-        protected bool Persisted
-        {
-            get { return _persisted; }
-            set { _persisted = value; }
-        }
-        #endregion
-
-        #region Constructors
-        public DataObject() { }
-
-        public DataObject(string column, object whereValue)
-        {
-            //TODO: Identificar o que foi alterado
-            //setField(column, whereValue);
-
-            //find();
-            //fetch();
-        }
-        #endregion
-
-        #region Finders
+		[Column(false)]
+		protected bool Persisted
+		{
+			get { return _persisted; }
+			set { _persisted = value; }
+		}
+		#endregion
+		
+		#region Constructors
+		public DataObject() {}
+		
+		public DataObject(string column, object whereValue)
+		{
+			//TODO: Identificar o que foi alterado
+			//setField(column, whereValue);
+			
+			//find();
+			//fetch();
+		}
+		#endregion
+		
+		#region Finders
         public bool retrieve(string column, object whereValue)
         {
-            PropertyInfo[] props = GetType().GetProperties();
+            bool result = false;
 
-            foreach (PropertyInfo propriedade in props)
+            StringBuilder sb = new StringBuilder("SELECT ");
+
+            if (Limit != null && !Limit.Trim().Equals(""))
             {
-                if (propriedade.PropertyType == typeof(bool) ||
-                    propriedade.PropertyType == typeof(System.Boolean))
-                {
-                    propriedade.SetValue(this, false, null);
-                }
-                else
-                {
-                    if (propriedade.PropertyType == typeof(byte) ||
-                        propriedade.PropertyType == typeof(System.Byte) ||
-                        propriedade.PropertyType == typeof(short) ||
-                        propriedade.PropertyType == typeof(System.Int16) ||
-                        propriedade.PropertyType == typeof(int) ||
-                        propriedade.PropertyType == typeof(System.Int32) ||
-                        propriedade.PropertyType == typeof(long) ||
-                        propriedade.PropertyType == typeof(System.Int64) ||
-                        propriedade.PropertyType == typeof(float) ||
-                        propriedade.PropertyType == typeof(System.Single) ||
-                        propriedade.PropertyType == typeof(double) ||
-                        propriedade.PropertyType == typeof(System.Double))
-                    {
-                        propriedade.SetValue(this, 0, null);
-                    }
-                    else
-                    {
-                        propriedade.SetValue(this, null, null);
-                    }
-                }
+                sb.Append("TOP ");
+                sb.Append(Limit);
+                sb.Append(" ");
             }
 
-            setField(column, whereValue);
-            return find();
+            sb.Append(Fields);
+            sb.Append(" FROM ");
+            sb.Append(Table);
+            bool found = false;
+
+            PropertyInfo propriedade = findColumn(column);
+
+            if (propriedade != null)
+            {
+                string name = null;
+                getColumnProperties(propriedade, ref name);
+
+                sb.Append(" WHERE ");
+                sb.Append(name);
+
+                if (propriedade.PropertyType == typeof(System.String))
+                    sb.Append(" LIKE ");
+                else
+                    sb.Append(" = ");
+
+                sb.Append(formatObject(whereValue));
+
+                found = true;
+            }
+
+            if (!found)
+            {
+                throw new CsDOException("Field '" + column + "' not found!");
+            }
+
+            AddModifiers(sb);
+
+            try
+            {
+                if (debug)
+                    Console.WriteLine("Query: \"" + sb + "\"");
+
+                dt = DataBase.New().QueryDT(sb.ToString());
+            }
+            catch (Exception e)
+            {
+                if (debug)
+                    Console.WriteLine("Exception: \"" + e.Message + "\"");
+                throw (e);
+            }
+
+            result = true;
+
+            return result;
         }
 
-        /// <summary>
-        /// Realiza uma busca, na tabela do SGBD referente à classe da instância
-        /// passando como condiçâo de busca o valor da chave primária da tabela
-        /// </summary>
-        /// <param name="keyValue">Valor da chave primária para a consulta ao SGBD</param>
-        /// <returns>Verdadeiro caso o registro tenha sido encontrado, falso caso contrário</returns>
         protected bool find(object keyValue)
         {
             string name = getPrimaryKeyName();
@@ -425,183 +437,15 @@ namespace CsDO.Lib
             return find();
         }
 
-        /// <summary>
-        /// Obtém e repassa os dados de uma busca pela chave primária à intância
-        /// </summary>
-        /// <param name="keyValue">Valor da chave primária para a consulta ao SGBD</param>
-        /// <returns>Verdadeiro caso o registro tenhasido encontrado, falso caso contrário</returns>
-        public bool Get(object keyValue)
-        {
-            if (find(keyValue))
-                return fetch();
-            else
-                return false;
-        }
-
-        #endregion
-
-        #region Util methods
-        /// <summary>
-        /// Formata o valor de um objeto para ser repassado ao SGBD
-        /// </summary>
-        /// <param name="valueObj">Objeto a ser analisado</param>
-        /// <returns>String representando o valor do objeto</returns>
-        protected string formatObject(object valueObj)
-        {
-            if (valueObj != null)
-            {
-                CultureInfo culture = new CultureInfo("en-US");
-
-                IFormatProvider formatNumber = culture.NumberFormat;
-
-                StringBuilder sb;
-
-                switch (valueObj.GetType().ToString())
-                {
-                    case "System.String":
-                        if (valueObj != null)
-                        {
-                            sb = new StringBuilder("'");
-                            sb.Append(valueObj.ToString());
-                            sb.Append("'");
-                            return sb.ToString();
-                        }
-                        else
-                            return "''";
-
-                    case "System.Nullable`1[System.Char]":
-                        sb = new StringBuilder("'");
-                        sb.Append(((Char)valueObj).ToString());
-                        sb.Append("'");
-                        return sb.ToString();
-
-                    case "System.Char":
-                        sb = new StringBuilder("'");
-                        sb.Append(((Char)valueObj).ToString());
-                        sb.Append("'");
-                        return sb.ToString();
-
-                    case "System.Nullable`1[System.Single]":
-                        return ((Single)valueObj).ToString(formatNumber);
-
-                    case "System.Single":
-                        return ((Single)valueObj).ToString(formatNumber);
-
-
-                    case "System.Nullable`1[System.Decimal]":
-                        return ((Decimal)valueObj).ToString(formatNumber);
-
-                    case "System.Decimal":
-                        return ((Decimal)valueObj).ToString(formatNumber);
-
-                    case "System.Nullable`1[System.Double]":
-                        return ((Double)valueObj).ToString(formatNumber);
-
-                    case "System.Double":
-                        return ((Double)valueObj).ToString(formatNumber);
-
-                    case "System.Nullable`1[System.Boolean]":
-                        return ((Boolean)valueObj) ? "'T'" : "'F'";
-
-                    case "System.Boolean":
-                        return ((Boolean)valueObj) ? "'T'" : "'F'";
-
-                    case "System.Nullable`1[System.DateTime]":
-                        sb = new StringBuilder("'");
-                        sb.Append(((DateTime)valueObj).ToString("yyyyMMdd HH:mm:ss"));
-                        sb.Append("'");
-                        return sb.ToString();
-
-                    case "System.DateTime":
-                        sb = new StringBuilder("'");
-                        sb.Append(((DateTime)valueObj).ToString("yyyyMMdd HH:mm:ss"));
-                        sb.Append("'");
-                        return sb.ToString();
-
-                    default:
-                        if (valueObj.GetType().IsSubclassOf(typeof(DataObject)))
-                            return formatObject(((DataObject)valueObj).getPrimaryKey());
-                        else
-                            return valueObj.ToString();
-                }
-            }
-            else
-                return "NULL";
-        }
-
-        /// <summary>
-        /// Obtém informações de persistência de um campo, field, passado por parâmetro
-        /// </summary>
-        /// <param name="field">Referência do campo de que se deseja obter informações</param>
-        /// <param name="name">Nome que o campo especificado por parâmetro possui, caso seja um campo persisitido, no SGBD</param>
-        /// <param name="isIdentity">Indica se o campo especificado por parâmetro, caso seja um campo persisitido, é do tipo Identity</param>
-        /// <returns>Retorna verdadeiro caso o campo indicado seja persistido, falso caso contrário</returns>
-        protected void getColumnProperties(PropertyInfo property, ref string name, ref bool persist)
-        {
-            object[] attributes = property.GetCustomAttributes(typeof(Column), true);
-
-            if (attributes.Length > 0)
-            {
-                Column column = (Column)attributes[0];
-                persist = column.Persist;
-
-                if (column.Name != null)
-                    name = column.Name;
-            }
-        }
-
-        /// <summary>
-        /// Obtém informações de persistência de um campo, field, passado por parâmetro
-        /// </summary>
-        /// <param name="field">Referência do campo de que se deseja obter informações</param>
-        /// <param name="name">Nome que o campo especificado por parâmetro possui, caso seja um campo persisitido, no SGBD</param>
-        /// <param name="isIdentity">Indica se o campo especificado por parâmetro, caso seja um campo persisitido, é do tipo Identity</param>
-        /// <param name="isPrimaryKey">Indica se o campo especificado por parâmetro, caso seja um campo persisitido, é uma chave primária</param>
-        /// <returns>Retorna verdadeiro caso o campo indicado seja persistido, falso caso contrário</returns>
-        protected void getColumnProperties(PropertyInfo property, ref string name, ref bool persist, ref bool primaryKey)
-        {
-            object[] attributes = property.GetCustomAttributes(typeof(Column), true);
-
-            if (attributes.Length > 0)
-            {
-                Column column = (Column)attributes[0];
-
-                persist = column.Persist;
-
-                if (column.Name != null)
-                    name = column.Name;
-            }
-
-            attributes = property.GetCustomAttributes(typeof(PrimaryKey), true);
-
-            if (attributes.Length > 0)
-            {
-                primaryKey = true;
-            }
-        }
-
-        /// <summary>
-        /// Obtém informações de persistência de um campo, field, passado por parâmetro
-        /// </summary>
-        /// <param name="field">Referência do campo de que se deseja obter informações</param>
-        /// <param name="name">Nome que o campo especificado por parâmetro possui, caso seja um campo persisitido, no SGBD</param>
-        /// <returns>Retorna verdadeiro caso o campo indicado seja persistido, falso caso contrário</returns>
-        protected void getColumnProperties(PropertyInfo property, ref string name)
-        {
-            object[] attributes = property.GetCustomAttributes(typeof(Column), true);
-
-            if (attributes.Length > 0)
-            {
-                Column column = (Column)attributes[0];
-
-                if (column.Name != null)
-                    name = column.Name;
-            }
-
-            if (name == null)
-                name = property.Name;
-        }
-
+		public bool Get(object keyValue)
+		{
+            find(keyValue);
+			return fetch();
+		}
+		
+		#endregion
+		
+		#region Util methods
         private string getPrimaryKeyName()
         {
             string name = null;
@@ -612,14 +456,6 @@ namespace CsDO.Lib
                 getColumnProperties((PropertyInfo)GetType().GetProperties()[0], ref name);
 
             return name;
-        }
-
-        public void setPrimaryKey(object key)
-        {
-            if (PrimaryKeys.Count > 0)
-                ((PropertyInfo)PrimaryKeys[0]).SetValue(this, key, null);
-            else
-                ((PropertyInfo)GetType().GetProperties()[0]).SetValue(this, key, null);
         }
 
         public object getPrimaryKey()
@@ -634,37 +470,32 @@ namespace CsDO.Lib
             return result;
         }
 
-        public string GetTable()
-        {
-            return Table;
-        }
+		public string GetTable() {
+			return Table;
+		}
 
-        public void SetDebug(bool value)
-        {
-            debug = value;
-        }
-
-        public bool GetDebug()
-        {
-            return debug;
-        }
-
-        protected bool loadFields(DataRow row, DataObject obj)
-        {
-            if (row != null && obj != null)
-            {
+		public void SetDebug(bool value) {
+			debug = value;
+		}
+		
+		public bool GetDebug() {
+			return debug;
+		}		
+		
+		protected bool loadFields(DataRow dr, DataObject obj) {          
+			if (dr != null && obj != null) {
                 if (Conf.DataPooling)
                 {
                     StringBuilder sb = new StringBuilder();
                     sb.Append(obj.GetType().ToString());
                     sb.Append("!");
-                    sb.Append(row[getPrimaryKeyName()]);
+                    sb.Append(dr[getPrimaryKeyName()]);
                     DataObject result = Conf.DataPool[sb.ToString()];
                     if (result != null)
                         result.Copy(obj);
                     else
                     {
-                        obj.setField(row);
+                        obj.setField(dr);
 
                         Persisted = true;
                         if (Conf.DataPooling)
@@ -680,7 +511,7 @@ namespace CsDO.Lib
                 }
                 else
                 {
-                    obj.setField(row);
+                    obj.setField(dr);
 
                     Persisted = true;
                     if (Conf.DataPooling)
@@ -688,23 +519,22 @@ namespace CsDO.Lib
 
                     return true;
                 }
-            }
-            else
-            {
-                if (debug && row == null)
-                    Console.WriteLine("Loading field error: DataReader is NULL in " + GetType());
-                if (debug && obj == null)
-                    Console.WriteLine("Loading field error: obj is NULL in " + GetType());
-                return false;
-            }
-        }
-
-        protected void AddModifiers(StringBuilder sb)
-        {
+			} else
+			{
+				if (debug && dr == null)
+					Console.WriteLine("Loading field error: DataReader is NULL in " + GetType());
+				if (debug && obj == null)
+					Console.WriteLine("Loading field error: obj is NULL in " + GetType());
+				return false;
+			}
+		}
+		
+		protected void AddModifiers(StringBuilder sb)
+		{
             string sql = sb.ToString();
 
             if (Where != null && !Where.Trim().Equals(""))
-            {
+			{
                 if (sql.ToUpper().IndexOf("WHERE") > -1)
                 {
                     sb.Append(" AND ");
@@ -715,7 +545,7 @@ namespace CsDO.Lib
                     sb.Append(" WHERE ");
                     sb.Append(Where);
                 }
-            }
+			}
 
             if (GroupBy != null && !GroupBy.Trim().Equals(""))
             {
@@ -728,31 +558,28 @@ namespace CsDO.Lib
                 sb.Append(" ORDER BY ");
                 sb.Append(OrderBy);
             }
-        }
+		}
 
-        public IList ToArray()
-        {
-            if (ResultSet != null && ResultSet.Rows.Count > 0)
-            {
-                ArrayList result = new ArrayList();
+		public IList ToArray()
+		{
+            ArrayList result = new ArrayList();
 
-                foreach (DataRow row in ResultSet.Rows)
-                {
-                    DataObject obj = (DataObject)Activator.CreateInstance(GetType());
+			if (dt != null && !dt.IsEmpty)
+            {			
+				while(dt.Read()) {
+					DataObject obj = (DataObject) Activator.CreateInstance(GetType());
+					
+					loadFields(dt[dt.Cursor], obj);
+					result.Add(obj);
+				}
+			}
 
-                    loadFields(row, obj);
-                    result.Add(obj);
-                }
-
-                return result;
-            }
-            else
-                return new ArrayList();
+            return result;
         }
 
         public IList ToArray(bool listAll)
         {
-            if (listAll)
+            if (dt == null && listAll)
             {
                 find();
             }
@@ -760,82 +587,172 @@ namespace CsDO.Lib
             return ToArray();
         }
 
-        public override string ToString()
-        {
+		public override string ToString()
+		{
             StringBuilder result = new StringBuilder();
             result.Append(this.GetType().ToString());
             result.Append("!");
 
-            if (PrimaryKeys.Count > 0)
-            {
-                result.Append(formatValue((PropertyInfo)PrimaryKeys[0]));
-            }
-            else
-            {
-                result.Append(formatValue((PropertyInfo)GetType().GetProperties()[0]));
-            }
+			if (PrimaryKeys.Count > 0) {						
+				result.Append(formatValue((PropertyInfo) PrimaryKeys[0]));
+			} else {
+				result.Append(formatValue((PropertyInfo) GetType().GetProperties()[0]));
+			}
 
-            return result.ToString();
-        }
+            return result.ToString();				
+		}
 
-        protected PropertyInfo findColumn(string column)
+		protected PropertyInfo findColumn(string column) {
+			PropertyInfo [] props =  GetType().GetProperties();
+			bool persist = false;
+			
+			foreach (PropertyInfo property in props)
+			{			
+				string name = null;
+				getColumnProperties(property, ref name, ref persist);
+				
+				if (!persist)
+					continue;
+				
+				if ((name != null && column.ToLower().Equals(name.ToLower())) ||
+				    (column.ToLower().Equals(property.Name.ToLower())))
+				{
+					return property;
+				}
+			}
+			
+			return null;
+		}
+
+		protected string formatValue(PropertyInfo property) {
+				string result = "";
+
+				if (property.PropertyType.IsSubclassOf(typeof(DataObject)))
+				{
+                    result = (property.GetValue(this, null) != null) ? formatObject(((DataObject)property.GetValue(this, null)).getPrimaryKey()) : "NULL";
+				} else
+					result = (property.GetValue(this, null) != null) ? formatObject(property.GetValue(this, null)) : "NULL";
+
+				return result;
+		}
+
+        protected string formatObject(object valueObj)
         {
-            PropertyInfo[] props = GetType().GetProperties();
-            bool persist = false;
-
-            foreach (PropertyInfo property in props)
+            if (valueObj != null)
             {
-                string name = null;
-                getColumnProperties(property, ref name, ref persist);
+                CultureInfo culture = new CultureInfo("en-US");
+                IFormatProvider formatNumber = culture.NumberFormat;
+                StringBuilder sb;
 
-                if (!persist)
-                    continue;
-
-                if ((name != null && column.ToLower().Equals(name.ToLower())) ||
-                    (column.ToLower().Equals(property.Name.ToLower())))
+                switch (valueObj.GetType().ToString())
                 {
-                    return property;
+                    case "System.Boolean":
+                    case "System.Nullable`1[System.Boolean]":
+                        return ((Boolean)valueObj ? "'T'" : "'F'");
+
+                    case "System.Char":
+                    case "System.Nullable`1[System.Char]":
+                        sb = new StringBuilder("'");
+                        sb.Append(((Char)valueObj).ToString());
+                        sb.Append("'");
+                        return sb.ToString();
+
+                    case "System.DateTime":
+                    case "System.Nullable`1[System.DateTime]":
+                        sb = new StringBuilder("'");
+                        sb.Append(((DateTime)valueObj).ToString("yyyyMMdd HH:mm:ss"));
+                        sb.Append("'");
+                        return sb.ToString();
+
+                    case "System.Decimal":
+                    case "System.Nullable`1[System.Decimal]":
+                        return ((Decimal)valueObj).ToString(formatNumber);
+
+                    case "System.Double":
+                    case "System.Nullable`1[System.Double]" :
+                        return ((Double)valueObj).ToString(formatNumber);
+
+                    case "System.Single":
+                    case "System.Nullable`1[System.Single]":
+                        return ((Single)valueObj).ToString(formatNumber);
+
+                    case "System.String":
+                        sb = new StringBuilder("'");
+                        sb.Append(valueObj.ToString());
+                        sb.Append("'");
+                        return sb.ToString();
+
+                    default:
+                        if (valueObj.GetType().IsSubclassOf(typeof(DataObject)))
+                            return formatObject(((DataObject)valueObj).getPrimaryKey());
+                        else //Tipos inteiros
+                            return valueObj.ToString();
                 }
             }
-
-            return null;
+            return "NULL";
         }
 
-        protected string formatValue(PropertyInfo property)
-        {
-            string result = "";
+		protected string getTableProperties() {
+			object[] attributes = GetType().GetCustomAttributes(typeof(Table), true);
 
-            if (property.PropertyType.IsSubclassOf(typeof(DataObject)))
-            {
-                result = (property.GetValue(this, null) != null) ? ((DataObject)property.GetValue(this, null)).getPrimaryKey().ToString() : "NULL";
-            }
-            else
-                result = (property.GetValue(this, null) != null) ? formatObject(property.GetValue(this, null)) : null;
+			if (attributes.Length > 0) {
+				Table table = (Table) attributes[0];
 
-            return result;
-        }
+				if (table.Name !=  null)
+					return table.Name;
+			}
 
-        protected string getTableProperties()
-        {
-            object[] attributes = GetType().GetCustomAttributes(typeof(Table), true);
+			return null;
+		}
 
-            if (attributes.Length > 0)
-            {
-                Table table = (Table)attributes[0];
+		protected void getColumnProperties(PropertyInfo property, ref string name, ref bool persist) {
+			object[] attributes = property.GetCustomAttributes(typeof(Column), true);
 
-                if (table.Name != null)
-                    return table.Name;
-            }
+			if (attributes.Length > 0) {
+				Column column = (Column) attributes[0];
+				persist = column.Persist;
 
-            return null;
-        }
+				if (column.Name !=  null)
+					name = column.Name;
+			}
+		}
 
-        protected bool isPrimaryKey(PropertyInfo property)
-        {
-            object[] attributes = property.GetCustomAttributes(typeof(PrimaryKey), true);
+		protected void getColumnProperties(PropertyInfo property, ref string name, ref bool persist, ref bool primaryKey) {
+			object[] attributes = property.GetCustomAttributes(typeof(Column), true);
 
-            return (attributes.Length > 0);
-        }
+			if (attributes.Length > 0) {
+				Column column = (Column) attributes[0];
+				persist = column.Persist;
+
+				if (column.Name !=  null)
+					name = column.Name;
+			}
+
+			attributes = property.GetCustomAttributes(typeof(PrimaryKey), true);
+
+			if (attributes.Length > 0)
+				primaryKey = true;
+		}
+
+		protected void getColumnProperties(PropertyInfo property, ref string name) {
+			object[] attributes = property.GetCustomAttributes(typeof(Column), true);
+			
+			if (attributes.Length > 0) {
+				Column column = (Column) attributes[0];
+				
+				if (column.Name !=  null)
+					name = column.Name;
+			}
+			
+			if (name == null)
+				name = property.Name;
+		}
+		
+		protected bool isPrimaryKey(PropertyInfo property) {
+			object[] attributes = property.GetCustomAttributes(typeof(PrimaryKey), true);
+
+			return (attributes.Length > 0);
+		}
 
         protected bool isIdentity(PropertyInfo property)
         {
@@ -844,39 +761,35 @@ namespace CsDO.Lib
             return (attributes.Length > 0);
         }
 
-        protected void getColumnProperties(PropertyInfo property, ref bool persist)
-        {
-            object[] attributes = property.GetCustomAttributes(typeof(Column), true);
+		protected void getColumnProperties(PropertyInfo property, ref bool persist) {
+			object[] attributes = property.GetCustomAttributes(typeof(Column), true);
 
-            if (attributes.Length > 0)
-            {
-                Column column = (Column)attributes[0];
-                persist = column.Persist;
-            }
-        }
+			if (attributes.Length > 0) {
+				Column column = (Column) attributes[0];
+				persist = column.Persist;
+			}
+		}
+		
+		protected void setField(DataRow dr)
+		{
+			PropertyInfo [] props =  GetType().GetProperties();
+			bool persist = false;
+			
+			foreach (PropertyInfo propriedade in props)
+			{			
+				string name = null;
+				getColumnProperties(propriedade, ref name, ref persist);
+				
+				if (!persist)
+					continue;
+					
+				if (String.IsNullOrEmpty(name))
+					name = propriedade.Name;
 
-        protected void setField(DataRow row)
-        {
-            PropertyInfo[] props = GetType().GetProperties();
-            bool persist = false;
-            List<PropertyInfo> keys = new List<PropertyInfo>();
-            ArrayList values = new ArrayList();
-
-            foreach (PropertyInfo propriedade in props)
-            {
-                string name = null;
-                getColumnProperties(propriedade, ref name, ref persist);
-
-                if (!persist)
-                    continue;
-
-                if (String.IsNullOrEmpty(name))
-                    name = propriedade.Name;
-
-                object val = row[name];
-
-                if (propriedade != null)
-                {
+				object val = dr[name];
+				
+			    if (propriedade != null)
+			    {			
                     #region Property holds a Foreign Key
                     if (propriedade.PropertyType.IsSubclassOf(typeof(DataObject)) &&
                                     !val.GetType().IsSubclassOf(typeof(DataObject)))
@@ -908,22 +821,32 @@ namespace CsDO.Lib
                                 propriedade.SetValue(this, val, null);
                                 continue;
                             }
+                        }
 
-                            if (obj.PrimaryKeys.Count > 0)
+                        if (obj.PrimaryKeys.Count > 0)
+                        {
+                            if (debug)
+                                Console.WriteLine("Set " + obj.GetType() + "[" + obj + "]." + ((PropertyInfo)obj.PrimaryKeys[0]).Name + "=" + val + "(" + val.GetType() + ")");
+                            ((PropertyInfo)obj.PrimaryKeys[0]).SetValue(obj, val, null);
+                            obj.find();
+                            obj.fetch();
+                            if (!obj.AssertField(((PropertyInfo)obj.PrimaryKeys[0]).Name, val))
                             {
                                 if (debug)
-                                    Console.WriteLine("Set " + obj.GetType() + "[" + obj + "]." + ((PropertyInfo)obj.PrimaryKeys[0]).Name + "=" + val + "(" + val.GetType() + ")");
-                                ((PropertyInfo)obj.PrimaryKeys[0]).SetValue(obj, val, null);
+                                    Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=null(" + val.GetType() + ")");
+                                propriedade.SetValue(this, null, null);
+                            }
+                            else
+                            {
+                                if (debug)
+                                    Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + obj + "(" + obj.GetType() + ")");
+                                propriedade.SetValue(this, obj, null);
                             }
                         }
-
-                        if (obj != null)
-                        {
-                            propriedade.SetValue(this, obj, null);
-                            keys.Add(propriedade);
-                            values.Add(val);
-                        }
-                    }
+                        else
+                            throw new CsDOException("Class '" + propriedade.PropertyType + "' has no Primary Key!");
+                        continue;
+                    }  
                     #endregion
                     else
                     #region Property holds data
@@ -937,70 +860,33 @@ namespace CsDO.Lib
                                 Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + val);
 
                         propriedade.SetValue(this, val, null);
-                    }
+                        continue;
+                    } 
                     #endregion
-                }
-            }
-
-            //dr.Close();
-
-            #region Retrieve Foreign Keys
-
-            for (int i = 0; i < keys.Count; i++)
-            {
-                PropertyInfo propriedade = keys[i];
-                DataObject obj = (DataObject)propriedade.GetValue(this, null);
-                object val = values[i];
-
-                if (obj != null)
-                {
-                    if (obj.PrimaryKeys.Count > 0)
-                    {
-                        obj.find();
-                        obj.fetch();
-                        if (!obj.AssertField(((PropertyInfo)obj.PrimaryKeys[0]), val))
-                        {
-                            if (debug)
-                                Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=null(" + val.GetType() + ")");
-                            propriedade.SetValue(this, null, null);
-                        }
-                        else
-                        {
-                            if (debug)
-                                Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + obj + "(" + obj.GetType() + ")");
-                            propriedade.SetValue(this, obj, null);
-                        }
-                    }
-                    else
-                        throw new CsDOException("Class '" + propriedade.PropertyType + "' has no Primary Key!");
-                }
-            }
-            #endregion
-        }
-
-        //TODO: Eliminar mais tarde		
-        protected void setField(string col, object val)
-        {
-            PropertyInfo propriedade = findColumn(col);
-
-            if (propriedade != null)
-            {
-                if (propriedade.PropertyType.IsSubclassOf(typeof(DataObject)) &&
-                    !val.GetType().IsSubclassOf(typeof(DataObject)))
-                {
-                    if (val == null || val.ToString().Equals("0") || val.GetType() == typeof(DBNull))
-                    {
-                        if (debug)
-                            Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=null(" + val.GetType() + ")");
-                        propriedade.SetValue(this, null, null);
-                        return;
-                    }
-
-                    DataObject obj = (DataObject)propriedade.GetValue(this, null);
-                    if (obj == null)
-                    {
-                        if (debug)
-                            Console.WriteLine("Activating: " + propriedade.PropertyType);
+			    }
+			}
+		}
+		
+		//TODO: Eliminar mais tarde		
+		protected void setField(string col, object val)
+		{
+			PropertyInfo propriedade = findColumn(col);
+			
+			if (propriedade != null)
+			{
+				if (propriedade.PropertyType.IsSubclassOf(typeof(DataObject)) &&
+					!val.GetType().IsSubclassOf(typeof(DataObject))) {
+					if (val == null || val.ToString().Equals("0") || val.GetType() == typeof(DBNull)) {
+						if (debug)
+							Console.WriteLine("Set "+ GetType() +"[" + this + "]." + propriedade.Name+"=null(" +val.GetType()+ ")");
+						propriedade.SetValue(this, null, null);
+						return;
+					}
+				
+					DataObject obj = (DataObject) propriedade.GetValue(this, null);	
+					if (obj == null) {
+						if (debug)
+							Console.WriteLine("Activating: "+ propriedade.PropertyType);
                         if (depth > 0)
                         {
                             obj = (DataObject)Activator.CreateInstance(propriedade.PropertyType);
@@ -1015,100 +901,88 @@ namespace CsDO.Lib
                             propriedade.SetValue(this, val, null);
                             return;
                         }
-                    }
-
-                    if (obj.PrimaryKeys.Count > 0)
-                    {
-                        if (debug)
-                            Console.WriteLine("Set " + obj.GetType() + "[" + obj + "]." + ((PropertyInfo)obj.PrimaryKeys[0]).Name + "=" + val + "(" + val.GetType() + ")");
+					}
+						
+					if (obj.PrimaryKeys.Count > 0) {
+						if (debug)
+							Console.WriteLine("Set "+ obj.GetType() +"[" + obj + "]." + ((PropertyInfo) obj.PrimaryKeys[0]).Name+"=" + val + "(" + val.GetType() + ")");
                         ((PropertyInfo)obj.PrimaryKeys[0]).SetValue(obj, val, null);
-                        obj.find();
-                        if (obj.fetch())
-                        {
-                            if (!obj.AssertField(((PropertyInfo)obj.PrimaryKeys[0]), val))
-                            {
-                                if (debug)
-                                    Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=null(" + val.GetType() + ")");
-                                propriedade.SetValue(this, null, null);
-                            }
-                            else
-                            {
-                                if (debug)
-                                    Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + obj + "(" + obj.GetType() + ")");
-                                propriedade.SetValue(this, obj, null);
-                            }
-                        }
-                        else
-                        {
-                            if (debug)
-                                Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=null(" + val.GetType() + ")");
-                            propriedade.SetValue(this, null, null);
-                        }
-                    }
-                    else
-                        throw new CsDOException("Class '" + propriedade.PropertyType + "' has no Primary Key!");
-                    return;
-                }
-                else
-                {
+						obj.find();
+						obj.fetch();
+						if (!obj.AssertField(((PropertyInfo) obj.PrimaryKeys[0]).Name, val)) {
+							if (debug)
+								Console.WriteLine("Set "+ GetType() +"[" + this + "]." + propriedade.Name + "=null(" +val.GetType() + ")");
+							propriedade.SetValue(this, null, null); 
+						} else {
+							if (debug)
+								Console.WriteLine("Set "+ GetType() +"[" + this + "]." + propriedade.Name + "="+obj+"(" +obj.GetType() + ")");
+								propriedade.SetValue(this, obj, null);
+						}							
+					} else
+						throw new CsDOException("Class '" + propriedade.PropertyType + "' has no Primary Key!");
+					return;
+				} else {
                     val = assertField(val, propriedade);
 
-                    if (debug)
+					if (debug)
                         if (val != null)
-                            Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + val + "(" + val.GetType() + ")");
+						    Console.WriteLine("Set "+ GetType() +"[" + this + "]." + propriedade.Name+"="+val+"(" +val.GetType()+ ")");
                         else
                             Console.WriteLine("Set " + GetType() + "[" + this + "]." + propriedade.Name + "=" + val);
 
-                    propriedade.SetValue(this, val, null);
+					propriedade.SetValue(this, val, null);
                     return;
-                }
-            }
-
-            throw new CsDOException("Field '" + col + "' not found!");
-        }
+				}
+			}
+			
+			throw new CsDOException("Field '" + col + "' not found!");
+		}
 
         private static object assertField(object val, PropertyInfo propriedade)
         {
-            if (propriedade.PropertyType == typeof(bool))
+            Type nullableType = null;
+
+            if (propriedade.PropertyType.Name == "Nullable`1")
+                nullableType = propriedade.PropertyType.GetGenericArguments()[0];
+            else
+                nullableType = propriedade.PropertyType;
+
+            if (val != null && (val.GetType().IsSubclassOf(typeof(DBNull))
+            || val.GetType() == typeof(DBNull)))
+            {
+                    val = null;
+            }
+            else if (nullableType == typeof(bool))
             {
                 if (val.ToString().ToUpper().Equals("T") || val.ToString().ToUpper().Equals("TRUE"))
                     val = (Boolean)true;
                 else
                     val = (Boolean)false;
             }
-            else if (propriedade.PropertyType == typeof(float) &&
+            else if (nullableType == typeof(float) &&
                 val.GetType() == typeof(double))
             {
                 val = float.Parse(((double)val).ToString());
             }
-            else if (val != null && (val.GetType().IsSubclassOf(typeof(DBNull))
-            || val.GetType() == typeof(DBNull)))
-            {
-                if (propriedade.PropertyType == typeof(byte) ||
-                    propriedade.PropertyType == typeof(int) ||
-                    propriedade.PropertyType == typeof(long) ||
-                    propriedade.PropertyType == typeof(float) ||
-                    propriedade.PropertyType == typeof(double))
-                    val = (byte)0;
-                else
-                    val = null;
-            }
+
             return val;
         }
 
-        protected bool AssertField(PropertyInfo propriedade, object val)
-        {
-            if (propriedade != null)
-            {
-                object obj = propriedade.GetValue(this, null);
-                if (obj != null)
-                    return obj.ToString().Equals(val.ToString());
-                else
-                    return obj == val;
-            }
-
-            throw new CsDOException("Field not found!");
-        }
+		protected bool AssertField(string col, object val)
+		{
+			PropertyInfo propriedade = findColumn(col);
+			
+			if (propriedade != null)
+			{
+				object obj = propriedade.GetValue(this, null);
+				if (obj != null)
+					return obj.ToString().Equals(val.ToString());
+				else
+					return obj == val;
+			}
+			
+			throw new CsDOException("Field '" + col + "' not found!");
+		}
 
         public object Clone()
         {
@@ -1122,7 +996,7 @@ namespace CsDO.Lib
             {
                 foreach (FieldInfo source in this.GetType().GetFields())
                 {
-                    BindingFlags flags = 0;
+                    BindingFlags flags = 0 ;
                     flags |= source.IsPublic ? BindingFlags.Public : BindingFlags.NonPublic;
                     flags |= source.IsStatic ? BindingFlags.Static : BindingFlags.Instance;
                     FieldInfo destination = obj.GetType().GetField(source.Name, flags |
@@ -1142,135 +1016,62 @@ namespace CsDO.Lib
                 }
             }
         }
-        #endregion
-
-        #region Data manipulation
-        /// <summary>
-        /// Neste OverLoad do método as operações são executadas na forma de Transaction SQL, ou seja, execução
-        /// de mais de uma operação em bancos de dados
-        /// </summary>
-        /// <param name="transactionID">Identificação da transação (Obtida através do método BeginTransaction)</param>
-        /// <returns>Verdadeiro caso a operação tenha sido executada corretamente, falso caso contrário</returns>
-        public bool insert(int? transactionID)
+		#endregion
+		
+		#region Data manipulation
+        public bool insert(DataObject obj)
         {
-            DbTransaction trans = (DbTransaction)transactions[transactionID.Value];
-
-            if (trans != null)
-            {
-                PropertyInfo fieldIdentity = null;
-
-                StringBuilder sql = new StringBuilder("INSERT INTO ");
-                sql.Append(this.Table);
-
-                StringBuilder fieldnames = new StringBuilder(" (");
-
-                StringBuilder values = new StringBuilder(" Values (");
-
-                PropertyInfo[] properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-                foreach (PropertyInfo property in properties)
-                {
-                    string name = null;
-                    bool isIdentity = false;
-                    object data = null;
-                    bool persist = false;
-
-                    getColumnProperties(property, ref name, ref persist);
-
-                    //If this field insn't persistent then go to the next field.
-                    if (!persist)
-                        continue;
-
-                    if (name == null)
-                        name = property.Name;
-
-                    //If this field is identity then it must not be included in the
-                    //insert list, and it must be updated its value after the insert.
-                    if (isIdentity)
-                        fieldIdentity = property;
-                    else
-                    {
-                        data = property.GetValue(this, null);
-
-                        if (data != null)
-                        {
-                            fieldnames.Append(name);
-                            fieldnames.Append(",");
-
-                            values.Append(formatObject(data));
-                            values.Append(",");
-                        }
-                    }
-                }
-
-                fieldnames.Remove(fieldnames.Length - 1, 1);
-                fieldnames.Append(")");
-                values.Remove(values.Length - 1, 1);
-                values.Append(")");
-                sql.Append(fieldnames);
-                sql.Append(values);
-
-                int i = 0;
-
-                if (fieldIdentity != null)
-                {
-                    DbParameter[] parameters = new DbParameter[] {
-                                                    Conf.Driver.getParameter("identColumn", DbType.Int32,4)
-                                                    };
-                    parameters[0].Direction = ParameterDirection.Output;
-
-                    sql.Append(" SELECT @identColumn =@@Identity FROM ");
-                    sql.Append(Table);
-
-                    i = DataBase.New().Exec(trans, sql.ToString(), parameters);
-
-                    if (fieldIdentity.PropertyType == typeof(int) || fieldIdentity.PropertyType == typeof(int?))
-                        fieldIdentity.SetValue(this, parameters[0].Value, null);
-                }
-                else
-                    i = DataBase.New().Exec(trans, sql.ToString());
-
-                return (i != 0);
-            }
+            if (obj != null && (this.GetType() == obj.GetType()))
+                return obj.insert();
             else
                 return false;
         }
 
-        /// <summary>
-        /// Persiste os valores contidos nos campos da instância.
-        /// Caso a instância passua um campo do tipo Identity,
-        /// esse é atualizado após os dados terem sido persistidos
-        /// </summary>
-        /// <returns>Verdadeiro caso os dados tenham sido persitidos corretamente, falso caso contrário</returns>
-        public bool insert()
+        public bool update(DataObject obj)
         {
+            if (obj != null && (this.GetType() == obj.GetType()))
+                return obj.update();
+            else
+                return false;
+        }
+
+        public bool delete(DataObject obj)
+        {
+            if (obj != null && (this.GetType() == obj.GetType()))
+                return obj.delete();
+            else
+                return false;
+        }
+
+		public bool insert()
+		{
             if (BeforeInsert != null)
                 BeforeInsert(this);
 
             PropertyInfo propriedadeIdentity = null;
             string ident = null;
-
+            
             StringBuilder sql = new StringBuilder("INSERT INTO ");
             sql.Append(Table);
 
-            StringBuilder values = new StringBuilder(" Values (");
+			StringBuilder values = new StringBuilder(" Values (");
+			
+			PropertyInfo [] props =  GetType().GetProperties();
+			
+			foreach (PropertyInfo propriedade in props)
+			{
+				bool persist = true;
+				string data = null;
 
-            PropertyInfo[] props = GetType().GetProperties();
+				getColumnProperties(propriedade, ref persist);
 
-            foreach (PropertyInfo propriedade in props)
-            {
-                bool persist = true;
-                string data = null;
+				if (!persist)
+					continue;
 
-                getColumnProperties(propriedade, ref persist);
-
-                if (!persist)
-                    continue;
-
-                if (autoIncrement != null && isPrimaryKey(propriedade))
-                {
-                    if (propriedade.PropertyType == typeof(int))
-                        propriedade.SetValue(this, autoIncrement(this), null);
+				if (autoIncrement != null && isPrimaryKey(propriedade))
+				{
+					if (propriedade.PropertyType == typeof(int))
+						propriedade.SetValue(this, autoIncrement(this), null);
 
                     if (debug)
                         Console.WriteLine("PrimaryKEY = " + ident);
@@ -1280,12 +1081,12 @@ namespace CsDO.Lib
                 {
                     getColumnProperties(propriedade, ref ident);
                     propriedadeIdentity = propriedade;
-
+                    
                     if (debug)
                         Console.WriteLine("PrimaryKEY" + ident);
                 }
 
-                data = formatValue(propriedade);
+				data = formatValue(propriedade);
 
                 if ((data != null) && !data.Equals("0")
                     && !data.Equals("'00010101 00:00:00'")
@@ -1294,19 +1095,19 @@ namespace CsDO.Lib
                     values.Append(data);
                     values.Append(",");
                 }
-            }
-
-            values.Remove(values.Length - 1, 1);
-            values.Append(")");
+			}
+			
+			values.Remove(values.Length -1, 1);
+			values.Append(")");
             sql.Append(" (");
             sql.Append(ActiveFields);
             sql.Append(")");
             sql.Append(values);
 
-            int i = 0;
-
+            int i=0;
+            
             if (debug)
-                Console.WriteLine("Ident = " + ident);
+                Console.WriteLine("Ident = "+ident);
 
             if (ident != null)
             {
@@ -1318,7 +1119,7 @@ namespace CsDO.Lib
                     Console.WriteLine("Exec: \"" + sql + "\"");
 
                 //int cod = DataBase.New().Exec(sql);
-                int result = 0;
+                int result = 0;   
                 IDataReader dr1 = DataBase.New().Query(sql.ToString());
                 if (dr1.Read())
                 {
@@ -1328,12 +1129,12 @@ namespace CsDO.Lib
                     result = Convert.ToInt32(dr1[ident]);
 
                     if (debug)
-                        Console.WriteLine("Codigo = " + result);
+                    Console.WriteLine("Codigo = " + result);
                 }
                 //i = result;
                 if (propriedadeIdentity.PropertyType == typeof(int))
                     propriedadeIdentity.SetValue(this, result, null);
-                // propriedadeIdentity.SetValue(this, identity(this), null);
+                   // propriedadeIdentity.SetValue(this, identity(this), null);
             }
             else
             {
@@ -1344,160 +1145,83 @@ namespace CsDO.Lib
                     Conf.DataPool.add(this);
             }
 
-            if (debug)
-                Console.WriteLine("Affected " + i + " rows");
+			if (debug)
+				Console.WriteLine("Affected " + i +" rows");
 
-            Persisted = (i == 1);
+			Persisted = (i == 1);
 
             if (AfterInsert != null)
                 AfterInsert(this, Persisted);
 
-            return (Persisted);
-        }
+			return (Persisted);
+		}
 
-        /// <summary>
-        /// Neste OverLoad do método as operações são executadas na forma de Transaction SQL, ou seja, execução
-        /// de mais de uma operação em bancos de dados
-        /// </summary>
-        /// <param name="transactionID">Identificação da transação (Obtida através do método BeginTransaction)</param>
-        /// <returns>Verdadeiro caso a operação tenha sido executada corretamente, falso caso contrário</returns>
-        public bool update(int? transactionID)
-        {
-            DbTransaction trans = (DbTransaction)transactions[transactionID.Value];
+		public bool deleteCascade()
+		{
+			bool result = true;
 
-            if (trans != null)
-            {
-                StringBuilder sql = new StringBuilder("UPDATE ");
-                StringBuilder clausule = new StringBuilder();
-                StringBuilder values = new StringBuilder();
+			if (Persisted)
+				result &= delete();
 
-                object search = "";
-                string operador = "";
+			if (ForeignKeys.Count > 0)
+				foreach(PropertyInfo foreignKey in ForeignKeys) {
+					DataObject obj = (DataObject) foreignKey.GetValue(this, null);
+					if (obj != null && obj.Persisted) {
+						if (debug)
+							Console.WriteLine("**** Deleting " + foreignKey.Name + " ...");
+						result &= obj.deleteCascade();
+						obj = null;
+						foreignKey.SetValue(this, null, null);
+					}
+					else if (debug)
+						if (obj != null)
+							Console.WriteLine("**** Skipped " + foreignKey.Name + "[" + obj.ToString() + "] ...");
+						else
+							Console.WriteLine("**** Skipped " + foreignKey.Name + " ...");
+				}
 
-                bool hasWhere = false;
+			return result;
+		}
 
-                PropertyInfo[] properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-                foreach (PropertyInfo property in properties)
-                {
-                    bool primaryKey = false;
-                    bool isIdentity = false;
-                    string name = null;
-                    bool persist = false;
-
-                    getColumnProperties(property, ref name, ref persist, ref primaryKey);
-
-                    //If this field insn't persistent then go to the next field.
-                    if (!persist)
-                        continue;
-
-                    if (name == null)
-                        name = property.Name;
-
-                    operador = " = ";
-
-                    if (property.PropertyType == typeof(System.String))
-                    {
-                        operador = " LIKE '%' + ";
-                    }
-
-                    search = property.GetValue(this, null);
-
-                    //TODO: Identificar o que foi alterado
-                    if (primaryKey && (search != null))
-                    {
-                        clausule.Append("(");
-                        clausule.Append(name);
-                        clausule.Append(operador);
-                        clausule.Append(formatObject(search));
-                        if (property.PropertyType == typeof(System.String))
-                            clausule.Append(" + '%'");
-                        clausule.Append(")");
-                        clausule.Append(" AND ");
-
-                        hasWhere = true;
-                    }
-                    else if (!isIdentity)
-                    {
-                        values.Append(name);
-                        values.Append("=");
-                        values.Append(formatObject(search));
-                        values.Append(",");
-                    }
-                }
-
-                if (String.IsNullOrEmpty(values.ToString()))
-                    return false;
-
-                values.Remove(values.Length - 1, 1);
-
-                bool result = false;
-
-                if (hasWhere)
-                {
-                    clausule.Remove(clausule.Length - 4, 4);
-                    sql.Append(Table);
-                    sql.Append(" SET ");
-                    sql.Append(values);
-                    sql.Append(" WHERE ");
-                    sql.Append(clausule);
-
-                    int i = DataBase.New().Exec(trans, sql.ToString());
-                    result = (i == 1);
-                }
-
-                return result;
-            }
-            else
-                return false;
-        }
-
-        /// <summary>
-        /// Atualiza, no SGBD, valores contidos nos campos da instância.
-        /// </summary>
-        /// <returns>Verdadeiro caso os dados tenham sido atualizados com corretamente, falso caso contrário</returns>
-        public bool update()
-        {
-            if (BeforeUpdate != null)
-                BeforeUpdate(this);
-
-            StringBuilder sql = new StringBuilder("UPDATE ");
+		public bool delete()
+		{
+            if (BeforeDelete != null)
+                BeforeDelete(this);
+			
+			StringBuilder sql = new StringBuilder("DELETE ");
             StringBuilder clausule = new StringBuilder();
-            string search = "";
-            string operador = "";
-            StringBuilder values = new StringBuilder();
-            bool hasWhere = false;
+			string search = "";
+			string operador = "";
+			bool hasWhere = false;
+			
+			PropertyInfo [] props =  GetType().GetProperties();
+			
+			foreach (PropertyInfo propriedade in props)
+			{
+				bool primaryKey = false;
+				bool persist = true;
+				string name = null;
+				
+				getColumnProperties(propriedade, ref name, ref persist, ref primaryKey);
+				
+				if (!persist)
+					continue;
+				
+				if (name == null)
+					name = propriedade.Name;
+				
+				operador = " = ";
 
-            PropertyInfo[] props = GetType().GetProperties();
-
-            foreach (PropertyInfo propriedade in props)
-            {
-                bool primaryKey = false;
-                bool persist = true;
-                string name = null;
-
-                getColumnProperties(propriedade, ref name, ref persist, ref primaryKey);
-
-                if (!persist)
-                    continue;
-
-                if (name == null)
-                    name = propriedade.Name;
-
-                operador = " = ";
-
-                if (propriedade.PropertyType == typeof(System.String))
-                {
-                    operador = " LIKE ";
-                }
-
-                search = formatValue(propriedade);
-
-                //TODO: Identificar o que foi alterado
-                if (primaryKey && (search != null) && !search.Equals("0")
-                    && !search.Equals("'00010101 00:00:00'")
-                    && !search.Equals("NULL"))
-                {
+				if (propriedade.PropertyType == typeof(System.String))
+				{
+					operador = " LIKE ";
+				} 
+				
+				search = formatValue(propriedade);
+				
+				//TODO: Identificar o que foi alterado
+				if ((search != null) && !search.Equals("0"))
+				{
                     StringBuilder item = new StringBuilder();
 
                     item.Append("(");
@@ -1505,421 +1229,161 @@ namespace CsDO.Lib
                     item.Append(operador);
                     item.Append(search);
                     item.Append(")");
-                    hasWhere = true;
+					hasWhere = true;
+
+                    clausule.Append(item);
+                    clausule.Append(" AND ");
+				}
+				
+				if (primaryKey)
+					break;
+			}
+			
+			if (hasWhere) {
+				clausule.Remove(clausule.Length - 4, 4);
+                sql.Append("FROM ");
+                sql.Append(Table);
+                sql.Append(" WHERE ");
+                sql.Append(clausule);
+			}
+
+            bool result = false;
+
+			if (hasWhere) {
+				try {
+					if (debug)
+						Console.WriteLine("Exec: \"" +sql +"\"");
+					int i = DataBase.New().Exec(sql.ToString());
+					if (debug)
+						Console.WriteLine("Affected " + i +" rows");
+                    if (Conf.DataPooling)
+                        Conf.DataPool.remove(this);
+					result = (i == 1);
+				} catch (Exception e) {
+					if (debug)
+						Console.WriteLine(e.Message + "\n" + e.StackTrace);
+					throw (e);
+				}
+			} else
+				result = false;
+
+            if (AfterDelete != null)
+                AfterDelete(this, result);
+
+            return result;
+		}
+		
+		public bool update()
+		{
+            if (BeforeUpdate != null)
+                BeforeUpdate(this);
+			
+			StringBuilder sql = new StringBuilder("UPDATE ");
+            StringBuilder clausule = new StringBuilder();
+			string search = "";
+			string operador = "";
+            StringBuilder values = new StringBuilder();
+			bool hasWhere = false;
+			
+			PropertyInfo [] props =  GetType().GetProperties();
+				
+			foreach (PropertyInfo propriedade in props)
+			{
+				bool primaryKey = false;
+				bool persist = true;
+				string name = null;
+                
+				getColumnProperties(propriedade, ref name, ref persist, ref primaryKey);
+
+				if (!persist)
+					continue;
+				
+				if (name == null)
+					name = propriedade.Name;
+				
+				operador = " = ";
+
+				if (propriedade.PropertyType == typeof(System.String))
+				{
+					operador = " LIKE ";
+				} 
+				
+				search = formatValue(propriedade);
+				
+				//TODO: Identificar o que foi alterado
+				if (primaryKey && (search != null) && !search.Equals("0")
+                    && !search.Equals("'00010101 00:00:00'") 
+                    && !search.Equals("NULL"))
+				{
+                    StringBuilder item = new StringBuilder();
+                    
+                    item.Append("(");
+                    item.Append(name);
+                    item.Append(operador);
+                    item.Append(search);
+                    item.Append(")");
+					hasWhere = true;
 
                     clausule.Append(item);
                     clausule.Append(" AND ");
                 }
-                else if ((search != null) && !search.Equals("0")
-                    && !search.Equals("'00010101 00:00:00'")
-                    && !search.Equals("NULL"))
+                else if(propriedade.PropertyType.Name == "Nullable`1")
                 {
                     values.Append(name);
                     values.Append("=");
                     values.Append(search);
                     values.Append(",");
                 }
-            }
-
-            if (!values.Equals(""))
-                values.Remove(values.Length - 1, 1);
-
-            if (hasWhere)
-            {
-                clausule.Remove(clausule.Length - 4, 4);
+                else if ((search != null) 
+                          && !search.Equals("0")
+                          && !search.Equals("'00010101 00:00:00'")
+                          && !search.Equals("NULL"))
+                {
+                    values.Append(name);
+                    values.Append("=");
+                    values.Append(search);
+                    values.Append(",");
+                }
+			}
+					
+			if (!values.ToString().Equals(""))
+				values.Remove(values.Length - 1, 1);
+			
+			if (hasWhere) {
+				clausule.Remove(clausule.Length - 4, 4);
                 sql.Append(Table);
                 sql.Append(" SET ");
                 sql.Append(values);
                 sql.Append(" WHERE ");
                 sql.Append(clausule);
-            }
+			}
 
             bool result = false;
 
-            if (hasWhere)
-            {
-                if (debug)
-                    Console.WriteLine("Exec: \"" + sql + "\"");
-                int i = DataBase.New().Exec(sql.ToString());
-                if (debug)
-                    Console.WriteLine("Affected " + i + " rows");
+			if (hasWhere) {
+				if (debug)
+					Console.WriteLine("Exec: \"" +sql +"\"");
+				int i = DataBase.New().Exec(sql.ToString());
+				if (debug)
+					Console.WriteLine("Affected " +i +" rows");
                 if (Conf.DataPooling)
                 {
                     Conf.DataPool.remove(this);
                     Conf.DataPool.add(this);
                 }
-                Persisted = (i == 1);
-                result = (i == 1);
-            }
-            else
-                result = false;
+				Persisted = (i >= 1);
+				result = (i >= 1);
+			} else
+				result = false;
 
             if (AfterUpdate != null)
                 AfterUpdate(this, result);
 
             return result;
-        }
+		}
+		#endregion
 
-        /// <summary>
-        /// Neste OverLoad do método as operações são executadas na forma de Transaction SQL, ou seja, execução
-        /// de mais de uma operação em bancos de dados.
-        /// É permitida a exlusão de múltiplos registros caso o valor da chave primária na instância seja nulo.
-        /// </summary>
-        /// <param name="transactionID">Identificação da transação (Obtida através do método BeginTransaction)</param>
-        /// <returns>Verdadeiro caso a operação tenha sido executada corretamente, falso caso contrário</returns>
-        public bool delete(int? transactionID)
-        {
-            StringBuilder sql = new StringBuilder("DELETE ");
-            StringBuilder clausule = new StringBuilder();
-            object search = null;
-            string operador = "";
-            bool hasWhere = false;
-
-            PropertyInfo[] properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-            foreach (PropertyInfo property in properties)
-            {
-                bool primaryKey = false;
-                bool persist = false;
-                string name = null;
-
-                getColumnProperties(property, ref name, ref persist, ref primaryKey);
-
-                if (!persist)
-                    continue;
-
-                if (name == null)
-                    name = property.Name;
-
-                operador = " = ";
-
-                if (property.PropertyType == typeof(System.String))
-                {
-                    operador = " LIKE '%' + ";
-                }
-
-                search = property.GetValue(this, null);
-
-                if (search != null)
-                {
-                    clausule.Append("(");
-                    clausule.Append(name);
-                    clausule.Append(operador);
-                    clausule.Append(formatObject(search));
-                    if (property.PropertyType == typeof(System.String))
-                        clausule.Append(" + '%'");
-                    clausule.Append(")");
-                    clausule.Append(" AND ");
-                    hasWhere = true;
-                }
-
-                if (primaryKey && (search != null))
-                    break;
-            }
-
-            bool result = false;
-
-            if (hasWhere)
-            {
-                clausule.Remove(clausule.Length - 4, 4);
-                sql.Append("FROM ");
-                sql.Append(Table);
-                sql.Append(" WHERE ");
-                sql.Append(clausule);
-
-                try
-                {
-                    int i = DataBase.New().Exec(sql.ToString());
-                    result = (i > 0);
-                }
-                catch (Exception e)
-                {
-                    throw (e);
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Remove, no SGBD, o registro referente à intância.
-        /// Permite a exlusão de múltiplos registros caso o valor da chave primária na instância seja nulo.
-        /// </summary>
-        /// <returns>Verdadeiro caso a operação tenha sido executada corretamente, falso caso contrário</returns>
-        public bool delete()
-        {
-            if (BeforeDelete != null)
-                BeforeDelete(this);
-
-            StringBuilder sql = new StringBuilder("DELETE ");
-            StringBuilder clausule = new StringBuilder();
-            string search = "";
-            string operador = "";
-            bool hasWhere = false;
-
-            PropertyInfo[] props = GetType().GetProperties();
-
-            foreach (PropertyInfo propriedade in props)
-            {
-                bool primaryKey = false;
-                bool persist = true;
-                string name = null;
-
-                getColumnProperties(propriedade, ref name, ref persist, ref primaryKey);
-
-                if (!persist)
-                    continue;
-
-                if (name == null)
-                    name = propriedade.Name;
-
-                operador = " = ";
-
-                if (propriedade.PropertyType == typeof(System.String))
-                {
-                    operador = " LIKE ";
-                }
-
-                search = formatValue(propriedade);
-
-                //TODO: Identificar o que foi alterado
-                if ((search != null) && !search.Equals("0"))
-                {
-                    StringBuilder item = new StringBuilder();
-
-                    item.Append("(");
-                    item.Append(name);
-                    item.Append(operador);
-                    item.Append(search);
-                    item.Append(")");
-                    hasWhere = true;
-
-                    clausule.Append(item);
-                    clausule.Append(" AND ");
-                }
-
-                if (primaryKey)
-                    break;
-            }
-
-            if (hasWhere)
-            {
-                clausule.Remove(clausule.Length - 4, 4);
-                sql.Append("FROM ");
-                sql.Append(Table);
-                sql.Append(" WHERE ");
-                sql.Append(clausule);
-            }
-
-            bool result = false;
-
-            if (hasWhere)
-            {
-                try
-                {
-                    if (debug)
-                        Console.WriteLine("Exec: \"" + sql + "\"");
-                    int i = DataBase.New().Exec(sql.ToString());
-                    if (debug)
-                        Console.WriteLine("Affected " + i + " rows");
-                    if (Conf.DataPooling)
-                        Conf.DataPool.remove(this);
-                    result = (i == 1);
-                }
-                catch (Exception e)
-                {
-                    if (debug)
-                        Console.WriteLine(e.Message + "\n" + e.StackTrace);
-                    throw (e);
-                }
-            }
-            else
-                result = false;
-
-            if (AfterDelete != null)
-                AfterDelete(this, result);
-
-            return result;
-        }
-
-        public bool deleteCascade()
-        {
-            bool result = true;
-
-            if (Persisted)
-                result &= delete();
-
-            if (ForeignKeys.Count > 0)
-                foreach (PropertyInfo foreignKey in ForeignKeys)
-                {
-                    DataObject obj = (DataObject)foreignKey.GetValue(this, null);
-                    if (obj != null && obj.Persisted)
-                    {
-                        if (debug)
-                            Console.WriteLine("**** Deleting " + foreignKey.Name + " ...");
-                        result &= obj.deleteCascade();
-                        obj = null;
-                        foreignKey.SetValue(this, null, null);
-                    }
-                    else if (debug)
-                        if (obj != null)
-                            Console.WriteLine("**** Skipped " + foreignKey.Name + "[" + obj.ToString() + "] ...");
-                        else
-                            Console.WriteLine("**** Skipped " + foreignKey.Name + " ...");
-                }
-
-            return result;
-        }
-        #endregion
-
-        #region Query
-        /// <summary>
-        /// Realiza uma busca, na tabela do SGBD referente à classe da instância,
-        /// passando como condições de busca os valores, não nulos, dos campos da instância
-        /// </summary>
-        /// <returns>Verdadeiro caso tenha sido retornado algum registro, falso caso contrário</returns>
-        public bool find()
-        {
-            StringBuilder sql = new StringBuilder("SELECT ");
-            StringBuilder clausule = new StringBuilder();
-            string search = "";
-            string operador = "";
-            bool hasWhere = false;
-
-            PropertyInfo[] props = GetType().GetProperties();
-
-            foreach (PropertyInfo propriedade in props)
-            {
-                bool primaryKey = false;
-                bool persist = true;
-                string name = null;
-
-                getColumnProperties(propriedade, ref name, ref persist, ref primaryKey);
-
-                if (!persist)
-                    continue;
-
-                if (name == null)
-                    name = propriedade.Name;
-
-                if (propriedade.PropertyType == typeof(bool) ||
-                    propriedade.PropertyType == typeof(System.Boolean))
-                    continue;
-
-                if (propriedade.PropertyType == typeof(bool))
-                    continue;
-
-                operador = " = ";
-
-                if (propriedade.PropertyType == typeof(System.String))
-                {
-                    operador = " LIKE ";
-                }
-
-                search = formatValue(propriedade);
-
-                //TODO: Identificar o que foi alterado
-                if (search != null && !search.Equals("0")
-                    && !search.Equals("'00010101 00:00:00'")
-                    && !search.Equals("NULL"))
-                {
-                    StringBuilder item = new StringBuilder();
-                    item.Append("(");
-                    item.Append(name);
-                    item.Append(operador);
-                    item.Append(search);
-                    item.Append(")");
-                    hasWhere = true;
-
-                    clausule.Append(item);
-                    clausule.Append(" AND ");
-                }
-
-                if (primaryKey && (search != null) && !search.Equals("0")
-                    && !search.Equals("00010101 00:00:00"))
-                    break;
-            }
-
-            if (hasWhere)
-            {
-                clausule.Remove(clausule.Length - 4, 4);
-
-                if (Limit != null && !Limit.Trim().Equals(""))
-                {
-                    sql.Append("TOP ");
-                    sql.Append(Limit);
-                    sql.Append(" ");
-                }
-
-                sql.Append(Fields);
-                sql.Append(" FROM ");
-                sql.Append(Table);
-                sql.Append(" WHERE ");
-                sql.Append(clausule);
-            }
-            else
-            {
-                if (Limit != null && !Limit.Trim().Equals(""))
-                {
-                    sql.Append("TOP ");
-                    sql.Append(Limit);
-                    sql.Append(" ");
-                }
-
-                sql.Append(Fields);
-                sql.Append(" FROM ");
-                sql.Append(Table);
-            }
-
-            AddModifiers(sql);
-
-            try
-            {
-                if (debug)
-                    Console.WriteLine("Query: \"" + sql + "\"");
-                ResultSet = DataBase.New().QueryDT(CommandType.Text, sql.ToString(), new DbParameter[] { });
-            }
-            catch (Exception e)
-            {
-                if (debug)
-                    Console.WriteLine("Exception: \"" + e.Message + "\"");
-                throw (e);
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Repassa os dados da consulta à intância
-        /// </summary>
-        /// <returns>Valor Booleano indicando verdadeiro caso tenha sido repassado o valor para o objeto, falso caso contrário</returns>
-        public bool fetch()
-        {
-            bool result = false;
-
-            if (ResultSet != null && ResultSet.Rows.Countg > 0)
-            {
-                DataRow row = ResultSet.Rows[rowsCounter++];
-
-                if (rowsCounter > ResultSet.Rows.Count)
-                {
-                    rowsCounter = ResultSet.Rows.Count;
-                }
-                else
-                {
-                    if (BeforeFetch != null)
-                        BeforeFetch(this);
-
-                    result = loadFields(row, this);
-
-                    if (AfterFetch != null)
-                        AfterFetch(this, result);
-                }
-            }
-
-            return result;
-        }
-
+		#region Query
         public IList select(object keyValue)
         {
             DataSet result = new DataSet(Table);
@@ -1937,7 +1401,146 @@ namespace CsDO.Lib
 
             return ToArray();
         }
-        #endregion
+
+		public bool find()
+		{	
+			StringBuilder sb = new StringBuilder("SELECT ");
+			StringBuilder clausule = new StringBuilder();
+
+            if (Limit != null && !Limit.Trim().Equals(""))
+            {
+                sb.Append("TOP ");
+                sb.Append(Limit);
+                sb.Append(" ");
+            }
+
+			string search = "";
+			string operador = "";
+			bool hasWhere = false;
+			
+			PropertyInfo [] props =  GetType().GetProperties();
+			
+			foreach (PropertyInfo propriedade in props)
+			{
+				bool primaryKey = false;
+				bool persist = true;
+				string name = null;
+				
+				getColumnProperties(propriedade, ref name, ref persist, ref primaryKey);
+				
+				if (!persist)
+					continue;
+				
+				if (name == null)
+					name = propriedade.Name;
+
+                if (propriedade.PropertyType == typeof(bool) ||
+                    propriedade.PropertyType == typeof(System.Boolean))
+                    continue;
+				
+				operador = " = ";
+
+				if (propriedade.PropertyType == typeof(System.String))
+				{
+					operador = " LIKE ";
+				} 
+				
+				search = formatValue(propriedade);
+				
+				//TODO: Identificar o que foi alterado
+                if (search != null && !search.Equals("0")
+                    && !search.Equals("'00010101 00:00:00'")
+                    && !search.Equals("NULL"))
+			        {
+                        StringBuilder item = new StringBuilder();
+                        item.Append("(");
+                        item.Append(name);
+                        item.Append(operador);
+                        item.Append(search);
+                        item.Append(")");
+				        hasWhere = true;
+
+                        clausule.Append(item);
+                        clausule.Append(" AND ");
+			        }
+				
+				if (primaryKey && (search != null) && !search.Equals("0")
+                    && !search.Equals("00010101 00:00:00"))
+					break;
+			}
+
+            if (hasWhere)
+            {
+                clausule.Remove(clausule.Length - 4, 4);
+                sb.Append(Fields);
+                sb.Append(" FROM ");
+                sb.Append(Table);
+                sb.Append(" WHERE ");
+                sb.Append(clausule);
+            }
+            else
+            {
+                sb.Append(Fields);
+                sb.Append(" FROM ");
+                sb.Append(Table);
+            }
+			
+			AddModifiers(sb);
+			
+			try 
+			{
+				if (debug)
+					Console.WriteLine("Query: \"" +sb +"\"");				
+				dt = DataBase.New().QueryDT(sb.ToString());
+			} catch(Exception e) {
+				if (debug)
+					Console.WriteLine("Exception: \"" + e.Message +"\"");
+                throw (e);
+			}
+
+			return true;
+		}
+		
+		///<summary>Repassa dos dados da consulta para o objeto</summary>
+		public bool fetch()
+		{
+			if ((dt != null) && !dt.IsEmpty) {
+
+                bool result = dt.Read();
+                if (debug)
+                {
+                    if (result)
+                        Console.WriteLine("*** Reading DataReader and loading fields ...");
+                    else
+                        Console.WriteLine("*** Closing DataReader ...");
+                }
+                
+                if (result)
+                {
+                    if (BeforeFetch != null)
+                        BeforeFetch(this);
+
+                    result = loadFields(dt[dt.Cursor], this);
+
+                    if (AfterFetch != null)
+                        AfterFetch(this, result);
+
+                }
+
+                return result;
+			}
+			
+			if (debug) {
+				if (dt == null)
+					Console.WriteLine("*** DataReader is NULL !!!");
+
+				if (dt.IsEmpty)
+					Console.WriteLine("*** DataReader is EMPTY !!!");
+			}
+			
+			return false;
+		}
+		#endregion
 
         #region Operators
         public override int GetHashCode()
@@ -2006,11 +1609,7 @@ namespace CsDO.Lib
                 foreach (PropertyInfo foreign in _foreignKeys)
                 {
                     if (foreign.PropertyType.IsSubclassOf(typeof(DataObject)))
-                    {
-                        DataObject obj = (DataObject)foreign.GetValue(this, new object[] { });
-                        if (obj != null)
-                            obj.Dispose();
-                    }
+                        ((DataObject)foreign.GetValue(this, new object[] {})).Dispose();
                 }
         }
         ~DataObject()
@@ -2054,7 +1653,7 @@ namespace CsDO.Lib
         //  protected event Identity identity = null; //for SQL SERVER
         protected event AutoIncrement autoIncrement = null;
 
-        public event OnAfterManipulation AfterDelete = null;
+        public event OnAfterManipulation  AfterDelete = null;
         public event OnBeforeManipulation BeforeDelete = null;
 
         public event OnAfterManipulation AfterInsert = null;
@@ -2064,62 +1663,7 @@ namespace CsDO.Lib
         public event OnBeforeManipulation BeforeUpdate = null;
 
         public event OnAfterManipulation AfterFetch = null;
-        public event OnBeforeManipulation BeforeFetch = null;
-        #endregion
-
-        #region Transaction
-        /// <summary>
-        /// Inicia uma transação com o SGBD.
-        /// Deve-se ser utilizado em conjunto com os métodos 
-        /// </summary>
-        /// <returns>Identificador para a transação iniciada</returns>
-        public static int? BeginTransaction()
-        {
-            DbConnection conn = Conf.Driver.getConnection();
-            conn.Open();
-            DbTransaction trans = conn.BeginTransaction();
-            if (!DataObject.transactions.ContainsKey(trans.GetHashCode()))
-            {
-                DataObject.transactions.Add(trans.GetHashCode(), trans);
-                return trans.GetHashCode();
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Salva as mudanças efetuadas pela transação indicada por parâmetro
-        /// </summary>
-        /// <param name="transactionID">Identificação da transação que se deseja salvar</param>
-        public static void CommitTransaction(int? transactionID)
-        {
-            DbTransaction trans = (DbTransaction)transactions[transactionID.Value];
-
-            if (trans != null)
-            {
-                DataObject.transactions.Remove(transactionID);
-                trans.Commit();
-                trans.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// Cancela as mudanças efetuadas pela transação indicada por parâmetro
-        /// </summary>
-        /// <param name="transactionID">Identificação da transação que se deseja cancelar</param>
-        public static void RollBackTransaction(int? transactionID)
-        {
-            DbTransaction trans = (DbTransaction)transactions[transactionID.Value];
-
-            if (trans != null)
-            {
-                DataObject.transactions.Remove(transactionID);
-                trans.Rollback();
-                trans.Dispose();
-            }
-        }
+        public event OnBeforeManipulation BeforeFetch= null;
         #endregion
 
         #region TODO
@@ -2190,6 +1734,6 @@ namespace CsDO.Lib
 			return true;
 		}
 		*/
-        #endregion
-    }
+		#endregion
+	}
 }

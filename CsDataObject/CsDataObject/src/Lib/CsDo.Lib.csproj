@@ -9,7 +9,7 @@
     </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
-    <AssemblyName>CsDO.Lib</AssemblyName>
+    <AssemblyName>CsDo.Lib</AssemblyName>
     <AssemblyOriginatorKeyFile>
     </AssemblyOriginatorKeyFile>
     <DefaultClientScript>JScript</DefaultClientScript>
@@ -27,10 +27,10 @@
     </UpgradeBackupLocation>
     <ProjectGuid>{29291966-F3A0-4F7A-816F-9376E5AF32BF}</ProjectGuid>
     <SignAssembly>false</SignAssembly>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
+    <SccProjectName>%24/CsDO/CsDataObject/src/Lib</SccProjectName>
+    <SccLocalPath>.</SccLocalPath>
+    <SccAuxPath>https://tfs01.codeplex.com</SccAuxPath>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>..\..\bin\</OutputPath>
@@ -113,7 +113,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CsDO.DataObject.cs">
-      <SubType>Code</SubType>
     </Compile>
     <Compile Include="CsDO.Drivers.Generic.cs" />
     <Compile Include="CsDO.Exceptions.cs">
