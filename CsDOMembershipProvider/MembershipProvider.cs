@@ -303,6 +303,18 @@ namespace CsDO.Membership
             _User_Name = GetProperty(typeof(User_Name));
             if (_User_Name == null)
                 throw new ProviderException("Must have User Name field.");
+            _User_LastLoginDate = GetProperty(typeof(User_LastLoginDate));
+            if (_User_LastLoginDate == null)
+                throw new ProviderException("Must have last Login Date field.");
+            _User_LastActivityDate = GetProperty(typeof(User_LastActivityDate));
+            if (_User_LastActivityDate == null)
+                throw new ProviderException("Must have Last Activity Date field.");
+            _User_LastPasswordChangedDate = GetProperty(typeof(User_LastPasswordChangedDate));
+            if (_User_LastPasswordChangedDate == null)
+                throw new ProviderException("Must have Last Password Changed Date field.");
+            _User_LastLockedOutDate = GetProperty(typeof(User_LastLockedOutDate));
+            if (_User_LastLockedOutDate == null)
+                throw new ProviderException("Must have Last Locked Out Date field.");
             _User_Password = GetProperty(typeof(User_Password));
             if (_User_Password == null)
                 throw new ProviderException("Must have User Password field.");
