@@ -1,0 +1,111 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Driver.OleDb", "src\Drivers\CsDO.Driver.OleDb.csproj", "{A85D143A-0FEE-4F35-AE08-E3E35133B2AE}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Driver.OleDb.Tests", "tests\src\Drivers\CsDO.Driver.OleDb.Tests.csproj", "{D2578EE2-EE3D-4EC2-B0B9-20CA6D489B5A}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Driver.SqlServer", "src\Drivers\CsDO.Driver.SqlServer.csproj", "{78045090-9CBE-4BD0-A03F-C881C3194BF8}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Driver.SqlServer.Tests", "tests\src\Drivers\CsDO.Driver.SqlServer.Tests.csproj", "{9FD8B0CB-885F-4ED1-83EC-6538067FC36D}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Lib.Tests", "tests\src\Lib\CsDO.Lib.Tests.csproj", "{74A50A6B-515D-4585-B9B0-40068B224909}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Lib", "src\Lib\CsDO.Lib.csproj", "{29291966-F3A0-4F7A-816F-9376E5AF32BF}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Lib.MockDriver", "src\Lib\CsDo.Lib.MockDriver\CsDO.Lib.MockDriver.csproj", "{C082C9D7-BB60-4829-9207-2B39FE57C9C5}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 8
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://tfs01.codeplex.com/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = src\\Drivers\\CsDO.Driver.OleDb.csproj
+		SccProjectName1 = src/Drivers
+		SccLocalPath1 = src\\Drivers
+		SccProjectUniqueName2 = tests\\src\\Drivers\\CsDO.Driver.OleDb.Tests.csproj
+		SccProjectName2 = tests/src/Drivers
+		SccLocalPath2 = tests\\src\\Drivers
+		SccProjectUniqueName3 = src\\Drivers\\CsDO.Driver.SqlServer.csproj
+		SccProjectName3 = src/Drivers
+		SccLocalPath3 = src\\Drivers
+		SccProjectUniqueName4 = tests\\src\\Lib\\CsDO.Lib.Tests.csproj
+		SccProjectName4 = tests/src/Lib
+		SccLocalPath4 = tests\\src\\Lib
+		SccProjectUniqueName5 = tests\\src\\Drivers\\CsDO.Driver.SqlServer.Tests.csproj
+		SccProjectName5 = tests/src/Drivers
+		SccLocalPath5 = tests\\src\\Drivers
+		SccProjectUniqueName6 = src\\Lib\\CsDO.Lib.csproj
+		SccProjectName6 = src/Lib
+		SccLocalPath6 = src\\Lib
+		SccProjectUniqueName7 = src\\Lib\\CsDo.Lib.MockDriver\\CsDO.Lib.MockDriver.csproj
+		SccProjectName7 = src/Lib/CsDo.Lib.MockDriver
+		SccLocalPath7 = src\\Lib\\CsDo.Lib.MockDriver
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A85D143A-0FEE-4F35-AE08-E3E35133B2AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A85D143A-0FEE-4F35-AE08-E3E35133B2AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A85D143A-0FEE-4F35-AE08-E3E35133B2AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A85D143A-0FEE-4F35-AE08-E3E35133B2AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2578EE2-EE3D-4EC2-B0B9-20CA6D489B5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2578EE2-EE3D-4EC2-B0B9-20CA6D489B5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2578EE2-EE3D-4EC2-B0B9-20CA6D489B5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2578EE2-EE3D-4EC2-B0B9-20CA6D489B5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78045090-9CBE-4BD0-A03F-C881C3194BF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78045090-9CBE-4BD0-A03F-C881C3194BF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78045090-9CBE-4BD0-A03F-C881C3194BF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78045090-9CBE-4BD0-A03F-C881C3194BF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FD8B0CB-885F-4ED1-83EC-6538067FC36D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FD8B0CB-885F-4ED1-83EC-6538067FC36D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FD8B0CB-885F-4ED1-83EC-6538067FC36D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FD8B0CB-885F-4ED1-83EC-6538067FC36D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74A50A6B-515D-4585-B9B0-40068B224909}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74A50A6B-515D-4585-B9B0-40068B224909}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74A50A6B-515D-4585-B9B0-40068B224909}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74A50A6B-515D-4585-B9B0-40068B224909}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29291966-F3A0-4F7A-816F-9376E5AF32BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29291966-F3A0-4F7A-816F-9376E5AF32BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29291966-F3A0-4F7A-816F-9376E5AF32BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29291966-F3A0-4F7A-816F-9376E5AF32BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
