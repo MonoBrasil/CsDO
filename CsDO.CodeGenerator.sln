@@ -1,0 +1,83 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.CodeGenerator", "CsDO.CodeGenerator\CsDO.CodeGenerator.csproj", "{32B7BC22-96CF-42AF-9DD8-87A92DA3F9F7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDOMembershipProvider", "CsDOMembershipProvider\CsDOMembershipProvider.csproj", "{BBE68246-7EAD-405B-AFDD-9302E85DBD25}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDo.Lib", "CsDO.Lib\CsDo.Lib.csproj", "{29291966-F3A0-4F7A-816F-9376E5AF32BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Lib.Tests", "CsDO.Lib.Tests\CsDO.Lib.Tests.csproj", "{74A50A6B-515D-4585-B9B0-40068B224909}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Driver.SqlServer", "CsDO.Drivers\CsDO.Driver.SqlServer.csproj", "{78045090-9CBE-4BD0-A03F-C881C3194BF8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsDO.Lib.MockDriver", "CsDo.Lib.MockDriver\CsDO.Lib.MockDriver.csproj", "{C082C9D7-BB60-4829-9207-2B39FE57C9C5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{29291966-F3A0-4F7A-816F-9376E5AF32BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29291966-F3A0-4F7A-816F-9376E5AF32BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29291966-F3A0-4F7A-816F-9376E5AF32BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29291966-F3A0-4F7A-816F-9376E5AF32BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32B7BC22-96CF-42AF-9DD8-87A92DA3F9F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32B7BC22-96CF-42AF-9DD8-87A92DA3F9F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32B7BC22-96CF-42AF-9DD8-87A92DA3F9F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32B7BC22-96CF-42AF-9DD8-87A92DA3F9F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74A50A6B-515D-4585-B9B0-40068B224909}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74A50A6B-515D-4585-B9B0-40068B224909}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74A50A6B-515D-4585-B9B0-40068B224909}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74A50A6B-515D-4585-B9B0-40068B224909}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78045090-9CBE-4BD0-A03F-C881C3194BF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78045090-9CBE-4BD0-A03F-C881C3194BF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78045090-9CBE-4BD0-A03F-C881C3194BF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78045090-9CBE-4BD0-A03F-C881C3194BF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBE68246-7EAD-405B-AFDD-9302E85DBD25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBE68246-7EAD-405B-AFDD-9302E85DBD25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBE68246-7EAD-405B-AFDD-9302E85DBD25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBE68246-7EAD-405B-AFDD-9302E85DBD25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C082C9D7-BB60-4829-9207-2B39FE57C9C5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = CsDO.CodeGenerator\CsDO.CodeGenerator.csproj
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 5
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://tfs01.codeplex.com/
+		SccProjectUniqueName0 = ..\\CsDO\\src\\Drivers\\CsDO.Driver.OleDb.csproj
+		SccProjectName0 = $/CsDO/CsDataObject/src/Drivers
+		SccAuxPath0 = https://tfs01.codeplex.com
+		SccLocalPath0 = ..\\CsDO\\src\\Drivers
+		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName1 = ..\\CsDO\\src\\Drivers\\CsDO.Driver.Npgsql.csproj
+		SccProjectName1 = $/CsDO/CsDataObject/src/Drivers
+		SccAuxPath1 = https://tfs01.codeplex.com
+		SccLocalPath1 = ..\\CsDO\\src\\Drivers
+		SccProvider1 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName2 = ..\\CsDO\\tests\\src\\Drivers\\CsDO.Driver.Npgsql.Tests.csproj
+		SccProjectName2 = $/CsDO/CsDataObject/tests/src/Drivers
+		SccAuxPath2 = https://tfs01.codeplex.com
+		SccLocalPath2 = ..\\CsDO\\tests\\src\\Drivers
+		SccProvider2 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName3 = ..\\CsDO\\tests\\src\\Drivers\\CsDO.Driver.OleDb.Tests.csproj
+		SccProjectName3 = $/CsDO/CsDataObject/tests/src/Drivers
+		SccAuxPath3 = https://tfs01.codeplex.com
+		SccLocalPath3 = ..\\CsDO\\tests\\src\\Drivers
+		SccProvider3 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName4 = ..\\CsDO\\tests\\src\\Drivers\\CsDO.Driver.SqlServer.Tests.csproj
+		SccProjectName4 = $/CsDO/CsDataObject/tests/src/Drivers
+		SccAuxPath4 = https://tfs01.codeplex.com
+		SccLocalPath4 = ..\\CsDO\\tests\\src\\Drivers
+		SccProvider4 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

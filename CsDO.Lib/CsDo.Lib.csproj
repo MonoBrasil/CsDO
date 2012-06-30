@@ -8,21 +8,21 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
-    <AssemblyName>CsDO.Driver.SqlServer</AssemblyName>
+    <AssemblyName>CsDo.Lib</AssemblyName>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
     <OutputType>Library</OutputType>
-    <RootNamespace>CsDO.Driver.SqlServer</RootNamespace>
+    <RootNamespace>CsDO.Lib</RootNamespace>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
-    <ProjectGuid>{78045090-9CBE-4BD0-A03F-C881C3194BF8}</ProjectGuid>
+    <ProjectGuid>{29291966-F3A0-4F7A-816F-9376E5AF32BF}</ProjectGuid>
     <SignAssembly>false</SignAssembly>
-    <SccProjectName>%24/CsDO/CsDataObject/src/Drivers</SccProjectName>
+    <SccProjectName>%24/CsDO/CsDataObject/src/Lib</SccProjectName>
     <SccLocalPath>.</SccLocalPath>
     <SccAuxPath>https://tfs01.codeplex.com</SccAuxPath>
     <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
@@ -38,12 +38,14 @@
     <DebugSymbols>true</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <NoWarn>1595</NoWarn>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
     <WarningLevel>4</WarningLevel>
     <DebugType>full</DebugType>
     <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRules>
+    </CodeAnalysisRules>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>..\..\bin\</OutputPath>
@@ -77,20 +79,38 @@
     <Reference Include="System.Xml">
       <Name>System.XML</Name>
     </Reference>
+    <Reference Include="System.Configuration" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CsDO.Driver.SqlServer.cs">
+    <Compile Include="Configuration\ConfigurationHelper.cs" />
+    <Compile Include="Configuration\ConfigurationInformation.cs" />
+    <Compile Include="Configuration\SectionHandler.cs" />
+    <Compile Include="CsDO.Attributes.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CsDO.Config.cs" />
+    <Compile Include="CsDO.DataBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CsDO.DataObject.cs">
+    </Compile>
+    <Compile Include="CsDO.Drivers.Generic.cs" />
+    <Compile Include="CsDO.Exceptions.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CsDO.ForeignKey.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CsDO.Pool.Object.cs" />
+    <Compile Include="CsDO.Util.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CsDO.Lib\CsDo.Lib.csproj">
-      <Project>{29291966-F3A0-4F7A-816F-9376E5AF32BF}</Project>
-      <Name>CsDo.Lib</Name>
-    </ProjectReference>
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
