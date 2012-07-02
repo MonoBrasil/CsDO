@@ -45,6 +45,7 @@ using CsDO.Lib;
 using System.Data;
 using System.Data.Common;
 using System.Configuration;
+using System.Collections.Generic;
 
 namespace CsDO.Lib.MockDriver
 {
@@ -53,6 +54,7 @@ namespace CsDO.Lib.MockDriver
         private MockConnection conn = null;
         private MockCommand prevCommand = null;
 		private string connectionString = null;
+		private Dictionary<string, DataTable> tables = new Dictionary<string, DataTable>();
 
         public MockCommand getPreviousCommand()
         {
@@ -63,7 +65,7 @@ namespace CsDO.Lib.MockDriver
 
 		public MockDriver() {
             string connectionString = ConfigurationManager.ConnectionStrings["MockDataProvider"].ConnectionString;
-            this.connectionString = connectionString == null ? "" : connectionString;
+            this.connectionString = connectionString ?? "";
 		}
 
         public MockDriver(string connectionString)
@@ -126,7 +128,40 @@ namespace CsDO.Lib.MockDriver
 
 			return conn;
 		}
-		
+
+		public DataTable addTable (string name)
+		{
+			DataTable table = new DataTable(name);
+			tables.Add(name, table);
+			return table;
+		}	
+
+		public DataColumn addColumn (string tableName, string columnName, Type dataType)
+		{
+			DataTable table = tables[tableName];
+			DataColumn column = table.Columns.Add(columnName, dataType);
+			return column;
+		}
+
+		public DataColumn addColumn (string tableName, string columnName, Type dataType, bool b, bool b2)
+		{
+			DataColumn column = addColumn(tableName, columnName, dataType);
+			return column;
+		}
+
+		public DataRow newRow (string tableName)
+		{
+			DataTable table = tables[tableName];
+			DataRow row = table.NewRow();
+			return row;
+		}
+
+		public void addRow (string tableName, DataRow row)
+		{
+			DataTable table = tables[tableName];
+			table.Rows.Add(row);
+		}
+
 		public void open(string URL) 
 	  	{
             try

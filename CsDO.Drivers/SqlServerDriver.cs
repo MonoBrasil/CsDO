@@ -1,7 +1,7 @@
 /*
  * Created by Alexandre Rocha Lima e Marcondes
  * User: Administrator
- * Date: 21/08/2005
+ * Date: 28/09/2005
  * Time: 16:13
  * 
  * Description: An SQL Builder, Object Interface to Database Tables
@@ -42,42 +42,38 @@
 
 using System;
 using System.Data;
-using System.Data.OleDb;
+using System.Data.SqlClient;
 
 using CsDO.Lib;
 using System.Data.Common;
 
-namespace CsDO.Drivers.OleDb
+namespace CsDO.Drivers.SqlServer
 {
 	[Obsolete("Use CsDO configuration files instead")]
-	public class OleDbDriver : IDataBase
+	public class SqlServerDriver : IDataBase
 	{
-		private OleDbConnection conn = null;
+		private SqlConnection conn = null;
 		private string connectionString = null;
 
         public DbConnection Connection { get { return conn; } }
 
-		public OleDbDriver() {
-			this.connectionString = Config.GetDbConectionString(Config.DBMS.OleDB);
+		public SqlServerDriver() {
+			connectionString = Config.GetDbConectionString(Config.DBMS.MSSQLServer);
 		}
 		
-		public OleDbDriver(string provider, string dataSource, string userId, string password) {
-			this.connectionString = "Provider="+provider+";Data Source="+dataSource+";"+ "User ID="+userId+";Password="+password;
+		public SqlServerDriver(string server, string user, string database, string password) 
+		{
+			connectionString =  "Server="+server+";User Id="+user+";Password="+password+";Database="+database+";";
 		}
-        
-        public DbDataAdapter getDataAdapter(DbCommand command)
-        {
-            return new OleDbDataAdapter((OleDbCommand)command);
-        }
 
 		protected string getUrl()
 		{
 			return connectionString;
 		}
-		
+
 		protected string getUrlSys()
 		{
-			return getUrl() +";Jet OLEDB:System Database=system.mdw;";
+			return getUrl();
 		}
 
         public DataTable getSchema()
@@ -95,29 +91,33 @@ namespace CsDO.Drivers.OleDb
             return conn.GetSchema(collectionName, restrictions);
         }
 
-		public DbCommand getCommand(String sql) 
-		{	
-			return new OleDbCommand(sql, (OleDbConnection) getConnection());
+		public DbCommand getCommand(String sql)
+		{
+
+			return new SqlCommand(sql, (SqlConnection) getConnection());
 		}
 
-		public DbCommand getSystemCommand(String sql) 
-		{	
-			return new OleDbCommand(sql, (OleDbConnection) getSystemConnection());
+		public DbCommand getSystemCommand(String sql)
+		{
+			return new SqlCommand(sql, (SqlConnection) getSystemConnection());
 		}
 
-		public DbConnection getConnection() 
-		{	
-			if (conn == null)
-    			open(getUrl());
-			
-		    	return conn;
+        public DbDataAdapter getDataAdapter(DbCommand command)
+        {
+            return new SqlDataAdapter((SqlCommand) command);
+        }
+
+		public DbConnection getConnection()
+		{
+			open(getUrl());
+
+			return conn;
 		}
 
-		public DbConnection getSystemConnection() 
-		{	
-			if (conn == null)
-    			open(getUrlSys());
-			
+		public DbConnection getSystemConnection()
+		{
+			open(getUrlSys());
+
 			return conn;
 		}
 
@@ -130,11 +130,30 @@ namespace CsDO.Drivers.OleDb
 		{
 			throw new System.NotImplementedException ();
 		}
-		
+
 		public void open(string URL) 
 	  	{
-			conn = new OleDbConnection(URL);
-	  		conn.Open();
+            try
+            {
+
+                if (conn == null)
+                {
+                    conn = new SqlConnection(URL);
+                    conn.Open();
+                }
+                else
+                {
+                    if (conn.State == ConnectionState.Broken
+                        || conn.State == ConnectionState.Closed)
+                    {
+                        conn.Open();
+                    }
+                }
+            }
+            catch (DataException)
+            {
+                conn.Dispose();
+            }
 		}
 
 		public void close()
@@ -144,3 +163,4 @@ namespace CsDO.Drivers.OleDb
 		}
 	}
 }
+

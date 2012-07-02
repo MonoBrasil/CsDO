@@ -67,7 +67,7 @@ namespace CsDO.CodeGenerator
             }
 
             foreach (string comment in text)
-                comments.Add(new CodeCommentStatement(comment, (type != null)));
+                comments.Add(new CodeCommentStatement(comment, (null != type)));
 
             switch (type)
             {

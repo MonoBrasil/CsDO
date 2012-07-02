@@ -44,7 +44,7 @@ namespace CsDO.CodeGenerator
                 }
                 else
                 {
-                    IDbCommand command = driver.getCommand("SELECT * FROM \"" + table.Table + "\"");
+                    DbCommand command = driver.getCommand("SELECT * FROM \"" + table.Table + "\"");
                     DbDataAdapter adapter = driver.getDataAdapter(command) as DbDataAdapter;
                     adapter.FillSchema(schema, SchemaType.Source);
                 }

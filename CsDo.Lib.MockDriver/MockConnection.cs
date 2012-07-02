@@ -4,6 +4,7 @@ using System.Text;
 using System.Data.Common;
 using System.Data;
 using System.ComponentModel;
+using CsDO.Lib;
 using CsDO.Lib.Configuration;
 
 namespace CsDO.Lib.MockDriver

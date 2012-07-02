@@ -39,9 +39,10 @@ namespace CsDO.Membership
         internal PropertyInfo _User_FailedPasswordAnswerAttemptCount;
         internal PropertyInfo _User_FailedPasswordAnswerAttemptWindowStart;
 
-        private string assemblyName;
-        private string roleType;
-        private string usersInRolesType;
+		//TODO: Not used yet
+        //private string assemblyName;
+        //private string roleType;
+        //private string usersInRolesType;
         #endregion
 
         #region Helper functions
@@ -472,9 +473,10 @@ namespace CsDO.Membership
                     throw new ProviderException("Password format not supported.");
             }
 
-            assemblyName = config["assemblyName"];
-            roleType = config["roleObjectType"];
-            usersInRolesType = config["usersInRolesObjectType"];
+			//TODO: not used yet
+            //assemblyName = config["assemblyName"];
+            //roleType = config["roleObjectType"];
+            //usersInRolesType = config["usersInRolesObjectType"];
             SetupParameters(config["assemblyName"], config["userObjectType"]);
 
             Configuration cfg =
@@ -580,7 +582,9 @@ namespace CsDO.Membership
                 }
 
                 DataObject data = NewUser();
-                data.setPrimaryKey(providerUserKey);
+
+				//TODO: implement it on DataObject
+                //data.setPrimaryKey(providerUserKey);
 
                 _User_Name.SetValue(data, username, null);
                 _User_Password.SetValue(data, EncodePassword(password), null);

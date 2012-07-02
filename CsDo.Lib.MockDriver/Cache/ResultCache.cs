@@ -6,6 +6,7 @@ using System.Data.Common;
 using System.Text;
 using System.IO;
 using System.Xml.Serialization;
+using CsDO.Lib;
 using CsDO.Lib.Configuration;
 
 namespace CsDO.Lib.MockDriver

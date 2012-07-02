@@ -77,13 +77,13 @@ namespace CsDO.CodeGenerator
 
         private void btnTestConnection_Click(object sender, EventArgs e)
         {
-            string connectionString = Config.CreateDbConectionString((Config.DBMS) cbxDriver.SelectedIndex);
+            //string connectionString = Config.CreateDbConectionString((Config.DBMS) cbxDriver.SelectedIndex);
 
             CreateConnection();
 
             try
             {
-                IDbConnection conn = driver.getConnection();
+                //IDbConnection conn = driver.getConnection();
                 lbxDatabase.Items.Clear();
                 lbxDatabase.Items.AddRange(SchemaReader.ReadSchema(driver).ToArray());
                 lbxDatabase.Sorted = true;

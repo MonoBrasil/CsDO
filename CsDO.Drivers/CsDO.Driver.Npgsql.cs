@@ -45,16 +45,17 @@ using System.Data;
 using Npgsql;
 
 using CsDO.Lib;
+using System.Data.Common;
 
 namespace CsDO.Drivers.Npgsql
 {
-
+	[Obsolete("Use CsDO configuration files instead")]
 	public class NpgsqlDriver : IDataBase
 	{
 		private NpgsqlConnection conn = null;
 		private string connectionString = null;
 
-        public IDbConnection Connection { get { return conn; } }
+        public DbConnection Connection { get { return conn; } }
 
 		public NpgsqlDriver() {
 			this.connectionString = Config.GetDbConectionString(Config.DBMS.PostgreSQL);
@@ -75,12 +76,12 @@ namespace CsDO.Drivers.Npgsql
 			return getUrl();
 		}
 
-		public IDbCommand getCommand(String sql) 
+		public DbCommand getCommand(String sql) 
 		{	
 			return new NpgsqlCommand(sql, (NpgsqlConnection) getConnection());
 		}
 
-		public IDbCommand getSystemCommand(String sql) 
+		public DbCommand getSystemCommand(String sql) 
 		{	
 			return new NpgsqlCommand(sql, (NpgsqlConnection) getSystemConnection());
 		}
@@ -100,7 +101,7 @@ namespace CsDO.Drivers.Npgsql
             return conn.GetSchema(collectionName, restrictions);
         }
 
-		public IDbConnection getConnection() 
+		public DbConnection getConnection() 
 		{	
 			if (conn == null)
     			open(getUrl());
@@ -108,7 +109,7 @@ namespace CsDO.Drivers.Npgsql
 		    	return conn;
 		}
 
-        public IDbConnection getSystemConnection() 
+        public DbConnection getSystemConnection() 
 		{	
 			if (conn == null)
     			open(getUrlSys());
@@ -116,10 +117,20 @@ namespace CsDO.Drivers.Npgsql
 			return conn;
 		}
 
-        public IDbDataAdapter getDataAdapter(IDbCommand command)
+        public DbDataAdapter getDataAdapter(DbCommand command)
         {
             return new NpgsqlDataAdapter((NpgsqlCommand)command);
         }
+
+		public DbParameter getParameter ()
+		{
+			throw new System.NotImplementedException ();
+		}
+
+		public DbParameter getParameter (string name, DbType type, int size)
+		{
+			throw new System.NotImplementedException ();
+		}
 
 		public void open(string URL) 
 	  	{

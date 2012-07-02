@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
@@ -26,9 +26,12 @@
     <SccLocalPath>.</SccLocalPath>
     <SccAuxPath>https://tfs01.codeplex.com</SccAuxPath>
     <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
+    <ReleaseVersion>1.0</ReleaseVersion>
+    <CodePage>65001</CodePage>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\bin\</OutputPath>
+    <OutputPath>..\target\Debug\</OutputPath>
     <BaseAddress>285212672</BaseAddress>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
@@ -48,7 +51,7 @@
     </CodeAnalysisRules>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\bin\</OutputPath>
+    <OutputPath>..\target\Release\</OutputPath>
     <BaseAddress>285212672</BaseAddress>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
@@ -88,24 +91,24 @@
     <Compile Include="Configuration\ConfigurationHelper.cs" />
     <Compile Include="Configuration\ConfigurationInformation.cs" />
     <Compile Include="Configuration\SectionHandler.cs" />
-    <Compile Include="CsDO.Attributes.cs">
+    <Compile Include="ObjectDataTable.cs" />
+    <Compile Include="Util.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CsDO.Config.cs" />
-    <Compile Include="CsDO.DataBase.cs">
+    <Compile Include="Pool.Object.cs" />
+    <Compile Include="ForeignKey.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CsDO.DataObject.cs">
-    </Compile>
-    <Compile Include="CsDO.Drivers.Generic.cs" />
-    <Compile Include="CsDO.Exceptions.cs">
+    <Compile Include="Exceptions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CsDO.ForeignKey.cs">
+    <Compile Include="Drivers.Generic.cs" />
+    <Compile Include="DataObject.cs" />
+    <Compile Include="DataBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CsDO.Pool.Object.cs" />
-    <Compile Include="CsDO.Util.cs">
+    <Compile Include="Config.cs" />
+    <Compile Include="Attributes.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

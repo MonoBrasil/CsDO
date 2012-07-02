@@ -45,6 +45,7 @@ using System.Reflection;
 using System.Data;
 using NUnit.Framework;
 using CsDO.Lib;
+using CsDO.Lib.MockDriver;
 
 namespace CsDO.Tests {
 
