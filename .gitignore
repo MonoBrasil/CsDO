@@ -18,3 +18,4 @@ Nunit-*/bin/TestResult.xml
 Nunit-*/bin/launcher*
 Nunit-*/bin/test*
 packages/
+TestResults/

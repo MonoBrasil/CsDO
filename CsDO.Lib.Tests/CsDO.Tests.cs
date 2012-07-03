@@ -729,9 +729,10 @@ namespace CsDO.Tests {
             obj3.ID = 1;
             obj3.Nome = "Obj1";
 
-            Assert.AreEqual(1414502324, obj1.GetHashCode(), "GetHashCode() #1 failing");
-            Assert.AreEqual(1414502324, obj2.GetHashCode(), "GetHashCode() #2 failing");
-            Assert.AreEqual(899915935, obj3.GetHashCode(), "GetHashCode() #3 failing");
+
+            Assert.AreEqual("CsDO.Tests.TesteObj!1".GetHashCode(), obj1.GetHashCode(), "GetHashCode() #1 failing");
+            Assert.AreEqual("CsDO.Tests.TesteObj!1".GetHashCode(), obj2.GetHashCode(), "GetHashCode() #2 failing");
+            Assert.AreEqual("CsDO.Tests.TesteObj3!1".GetHashCode(), obj3.GetHashCode(), "GetHashCode() #3 failing");
             Assert.IsTrue(obj1.Equals(obj2), "Equals operator #1 failing");
             Assert.IsTrue(obj2.Equals(obj1), "Equals operator #2 failing");
             Assert.IsFalse(obj1.Equals(obj3), "Equals operator #3 failing"); 
