@@ -54,7 +54,7 @@ namespace CsDO.Lib.MockDriver
         private MockConnection conn = null;
         private MockCommand prevCommand = null;
 		private string connectionString = null;
-		private Dictionary<string, DataTable> tables = new Dictionary<string, DataTable>();
+		private DataSet ds = new DataSet("mock");
 
 		const string MockDataProvider = "MockDataProvider";
 
@@ -135,13 +135,13 @@ namespace CsDO.Lib.MockDriver
 		public DataTable addTable (string name)
 		{
 			DataTable table = new DataTable(name);
-			tables.Add(name, table);
+			ds.Tables.Add(table);
 			return table;
 		}	
 
 		public DataColumn addColumn (string tableName, string columnName, Type dataType)
 		{
-			DataTable table = tables[tableName];
+			DataTable table = ds.Tables[tableName];
 			DataColumn column = table.Columns.Add(columnName, dataType);
 			return column;
 		}
@@ -154,14 +154,14 @@ namespace CsDO.Lib.MockDriver
 
 		public DataRow newRow (string tableName)
 		{
-			DataTable table = tables[tableName];
+			DataTable table = ds.Tables[tableName];
 			DataRow row = table.NewRow();
 			return row;
 		}
 
 		public void addRow (string tableName, DataRow row)
 		{
-			DataTable table = tables[tableName];
+			DataTable table = ds.Tables[tableName];
 			table.Rows.Add(row);
 		}
 

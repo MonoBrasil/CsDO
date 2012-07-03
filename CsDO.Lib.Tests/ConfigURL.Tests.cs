@@ -20,7 +20,7 @@ namespace CsDO.Tests
 		public void TestUser()
 		{
 			Config.GetDbConectionString(Config.DBMS.PostgreSQL);
-			Assert.AreEqual(Config.User, "postgres");
+			Assert.AreEqual(Config.User, "csdo");
 		}
 		
 		[Test]
@@ -54,7 +54,7 @@ namespace CsDO.Tests
 		[Test]
 		public void TestGetConnectionString()
 		{
-			string connStr = "Server=localhost;port=5432;User Id=postgres;Password=teste;Database=csdo;";
+			string connStr = "Server=localhost;port=5432;User Id=csdo;Password=teste;Database=csdo;";
 			Assert.AreEqual(connStr, Config.GetDbConectionString(Config.DBMS.PostgreSQL));
 		}	
 	

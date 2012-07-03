@@ -74,8 +74,8 @@ namespace CsDO.Lib.MockDriver
 
             if ( _cache.ContainsKey( hashedKey ) )
                 return _cache[ hashedKey ];
-            else
-                throw new Exception( "The result is not found in cache" );
+			else
+				return new ResultCacheEntry(hashedKey, 1);
         }
 
         public void Add( int hashedKey, object scalarResult )
