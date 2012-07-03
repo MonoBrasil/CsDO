@@ -17,3 +17,4 @@ Nunit-*/bin/agent*
 Nunit-*/bin/TestResult.xml
 Nunit-*/bin/launcher*
 Nunit-*/bin/test*
+packages/
