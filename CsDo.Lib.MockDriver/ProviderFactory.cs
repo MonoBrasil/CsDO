@@ -10,15 +10,10 @@ using CsDO.Lib.Configuration;
 namespace CsDO.Lib.MockDriver
 {
     internal class ProviderFactory : DbProviderFactory
-    {
+    {      
         #region Factory
 
         public static readonly ProviderFactory Instance = new ProviderFactory( );
-
-        #endregion
-        
-        #region Private Vars
-
         private DbProviderFactory _factory = DbProviderFactories.GetFactory(ConfigurationHelper.Instance.Driver);
 
         #endregion
@@ -33,12 +28,8 @@ namespace CsDO.Lib.MockDriver
 
         public override bool CanCreateDataSourceEnumerator
         {
-            get
-            {
-                return _factory.CanCreateDataSourceEnumerator;
-            }
+            get { return _factory.CanCreateDataSourceEnumerator; }
         }
-
         #endregion
         
         #region Public Methods

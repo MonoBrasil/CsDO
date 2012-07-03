@@ -90,18 +90,18 @@ namespace CsDO.Tests {
 		[Test]
 		public void Exec() {
 			DataBase db = DataBase.New();
+
+			Assert.AreEqual(0, db.Exec("CREATE TABLE teste (ID INT, Nome VARCHAR(12))"), "Exec not working properly");
+			//Assert.AreEqual(1, db.Exec("INSERT INTO teste (Nome) VALUES ('teste') WHERE ID=1"), "Exec not working properly");
+			Assert.AreEqual(1, db.Exec("INSERT INTO teste (Nome) VALUES ('teste')"), "Exec not working properly");
 			Assert.AreEqual(0, db.Exec("SELECT * FROM teste WHERE ID=1"), "Exec not working properly");
 			Assert.AreEqual(0, db.Exec("SELECT * FROM teste"), "Exec not working properly");
-			Assert.AreEqual(1, db.Exec("INSERT INTO teste (Nome) VALUES ('teste') WHERE ID=1"), "Exec not working properly");
-			Assert.AreEqual(1, db.Exec("INSERT INTO (Nome) VALUES ('teste') teste"), "Exec not working properly");
-			Assert.AreEqual(1, db.Exec("UPDATE teste SET Nome='teste' WHERE ID=1"), "Exec not working properly");
-			Assert.AreEqual(99248446, db.Exec("UPDATE teste SET Nome='teste'"), "Exec not working properly");
+			Assert.AreEqual(0, db.Exec("UPDATE teste SET Nome='teste' WHERE ID=1"), "Exec not working properly");
+			Assert.AreEqual(1, db.Exec("UPDATE teste SET Nome='teste', ID=1"), "Exec not working properly");
 			Assert.AreEqual(1, db.Exec("DELETE FROM teste WHERE ID=1"), "Exec not working properly");
-			Assert.AreEqual(99248446, db.Exec("DELETE FROM teste"), "Exec not working properly");
-			Assert.AreEqual(1, db.Exec("CREATE TABLE teste (ID INT, Nome VARCHAR(12))"), "Exec not working properly");
-			Assert.AreEqual(1, db.Exec("DROP TABLE teste"), "Exec not working properly");
+			Assert.AreEqual(0, db.Exec("DELETE FROM teste"), "Exec not working properly");
+			Assert.AreEqual(0, db.Exec("DROP TABLE teste"), "Exec not working properly");
 		}
-
 	}
 
     #region Objects
@@ -729,9 +729,9 @@ namespace CsDO.Tests {
             obj3.ID = 1;
             obj3.Nome = "Obj1";
 
-            Assert.AreEqual(-1068139592, obj1.GetHashCode(), "GetHashCode() #1 failing");
-            Assert.AreEqual(-1068139592, obj2.GetHashCode(), "GetHashCode() #2 failing");
-            Assert.AreEqual(-215188568, obj3.GetHashCode(), "GetHashCode() #3 failing");
+            Assert.AreEqual(1414502324, obj1.GetHashCode(), "GetHashCode() #1 failing");
+            Assert.AreEqual(1414502324, obj2.GetHashCode(), "GetHashCode() #2 failing");
+            Assert.AreEqual(899915935, obj3.GetHashCode(), "GetHashCode() #3 failing");
             Assert.IsTrue(obj1.Equals(obj2), "Equals operator #1 failing");
             Assert.IsTrue(obj2.Equals(obj1), "Equals operator #2 failing");
             Assert.IsFalse(obj1.Equals(obj3), "Equals operator #3 failing"); 

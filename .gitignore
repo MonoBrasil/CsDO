@@ -2,3 +2,5 @@
 *.suo
 *.userprefs
 target
+CsDO.Driver.Tests/test-results
+CsDO.Lib.Tests/test-results

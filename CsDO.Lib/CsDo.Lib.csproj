@@ -90,7 +90,6 @@
     </Compile>
     <Compile Include="Configuration\ConfigurationHelper.cs" />
     <Compile Include="Configuration\ConfigurationInformation.cs" />
-    <Compile Include="Configuration\SectionHandler.cs" />
     <Compile Include="ObjectDataTable.cs" />
     <Compile Include="Util.cs">
       <SubType>Code</SubType>
@@ -111,9 +110,7 @@
     <Compile Include="Attributes.cs">
       <SubType>Code</SubType>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
+    <Compile Include="Configuration\ConfigurationSectionHandler.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

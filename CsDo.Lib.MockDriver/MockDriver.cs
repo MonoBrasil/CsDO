@@ -56,6 +56,8 @@ namespace CsDO.Lib.MockDriver
 		private string connectionString = null;
 		private Dictionary<string, DataTable> tables = new Dictionary<string, DataTable>();
 
+		const string MockDataProvider = "MockDataProvider";
+
         public MockCommand getPreviousCommand()
         {
             return prevCommand;
@@ -64,13 +66,14 @@ namespace CsDO.Lib.MockDriver
         public DbConnection Connection { get { return conn; } }
 
 		public MockDriver() {
-            string connectionString = ConfigurationManager.ConnectionStrings["MockDataProvider"].ConnectionString;
-            this.connectionString = connectionString ?? "";
+			var connection = ConfigurationManager.ConnectionStrings[MockDataProvider];
+			string connectionString = connection != null ? connection.ConnectionString : null;
+            this.connectionString = connectionString ?? string.Empty;
 		}
 
         public MockDriver(string connectionString)
         {
-            this.connectionString = connectionString;
+            this.connectionString = connectionString ?? string.Empty;
         }
 		
 		protected string getUrl()
