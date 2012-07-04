@@ -62,6 +62,7 @@ namespace CsDO.Driver.Tests {
 		}
 
 		[Test]
+		[Ignore("Deprecated")]
 		public void Exec() {
 			DataBase db = DataBase.New();
 			Assert.AreEqual(0, db.Exec("CREATE TABLE test (ID CHAR(1))"), "Exec not working properly");

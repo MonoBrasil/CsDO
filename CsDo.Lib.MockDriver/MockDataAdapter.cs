@@ -39,6 +39,13 @@ namespace CsDO.Lib.MockDriver
 
         public override int Fill(DataSet dataSet)
         {
+			if (Configuration.ConfigurationHelper.Instance.TestMode)
+			{
+				dataSet.Merge(((MockDriver)Conf.Driver).ds);
+
+				return 1;
+			}
+
             return base.Fill(dataSet);
         }
     }

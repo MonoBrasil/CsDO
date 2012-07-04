@@ -32,12 +32,11 @@ namespace CsDO.Lib.MockDriver
         {
             DataTable[] param = new DataTable[data.Tables.Count];
 
-            int i = 0;
-            foreach (DataTable table in data.Tables)
-            {
-                param[i] = table;
-                i++;
-            }
+            for (int i = 0; i < data.Tables.Count; i++)
+			{
+				DataTable table = data.Tables[i];
+				param[i] = table;
+			}
 
             SetInternalState(param, recordsAffected);
         }

@@ -75,7 +75,7 @@ namespace CsDO.Lib.MockDriver
             if ( _cache.ContainsKey( hashedKey ) )
                 return _cache[ hashedKey ];
 			else
-				return new ResultCacheEntry(hashedKey, 1);
+				return new ResultCacheEntry(hashedKey, 1, ((MockDriver)Conf.Driver).ds);
         }
 
         public void Add( int hashedKey, object scalarResult )

@@ -54,7 +54,7 @@ namespace CsDO.Lib.MockDriver
         private MockConnection conn = null;
         private MockCommand prevCommand = null;
 		private string connectionString = null;
-		private DataSet ds = new DataSet("mock");
+		internal DataSet ds = new DataSet("mock");
 
 		const string MockDataProvider = "MockDataProvider";
 
