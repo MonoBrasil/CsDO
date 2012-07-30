@@ -19,3 +19,4 @@ Nunit-*/bin/launcher*
 Nunit-*/bin/test*
 packages/
 TestResults/
+test-results
